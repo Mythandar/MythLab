@@ -8,5 +8,6 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <Deterministic>true</Deterministic>
+    <DebugType Condition="'$(Configuration)' == 'Release'">embedded</DebugType>
   </PropertyGroup>
 </Project>

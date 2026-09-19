@@ -27,3 +27,11 @@ Offscreen rendering is not a full interactive desktop acceptance test. Manually 
 The smoke harness composes production view models and repositories but does not run the production OnStartup method or exercise OS credential facilities (not implemented). No installer/publish validation yet; run from the SDK or the built Release executable with the matching .NET Desktop runtime.
 
 The only diagnostic opt-in is WPF0001 in ThemeManager: WPF marks dynamic ThemeMode switching experimental even in this .NET 10 SDK. The adapter contains it; no project-wide warning suppression.
+
+## Portable follow-up — 2026-09-19
+- Release build: zero warnings/errors. 40 tests passed (26 Core, 14 Infrastructure).
+- Added executable-relative path, fresh portable setup, existing-folder protection, committed WAL/settings migration, and failed-import rollback tests.
+- Published app output contains exactly RemoteManager.exe, approximately 63.4 MiB, with .NET and SQLite bundled.
+- Published and executed the WPF smoke harness as a self-contained single-file Windows x64 executable; all existing UI/SQLite checks passed. This validates the deployment mechanism, not a manual interactive launch of the final application.
+- Normal locked restore passes. Portable publishing has its own packages.portable.lock.json because the RID and SDK single-file build tooling change restore requirements.
+- Package inventory now includes the SDK-added Microsoft.NET.ILLink.Tasks (MIT); trimming remains disabled. Restore with -p:PublishProfile=Portable before regenerating the complete publish-time license inventory.

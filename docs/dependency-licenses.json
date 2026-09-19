@@ -60,6 +60,12 @@
         "projectUrl":  "https://dot.net/"
     },
     {
+        "package":  "Microsoft.NET.ILLink.Tasks/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://dot.net/"
+    },
+    {
         "package":  "Microsoft.NET.Test.Sdk/17.14.1",
         "licenseType":  "expression",
         "license":  "MIT",

@@ -50,3 +50,10 @@ ConPTY, tabs, tray mode, scheduled wake, SFTP, jump hosts, shutdown, integration
 
 ## Verification record
 2026-09-19: Milestone A complete. Final Release build: zero warnings/errors. 35 offline tests passed. WPF smoke harness passed with no binding errors; rendered light/dark inventory and editor reviewed. NuGet reported no known vulnerable packages. See VERIFICATION.md for reproducible commands and manual desktop checks still needed. Next: Milestone B, including subnet/broadcast unit tests before discovery transport.
+
+## Portable packaging follow-up
+- [x] Store normal settings, SQLite inventory and logs in Data beside the executable.
+- [x] Preserve existing AppData inventory/settings through one-time SQLite backup migration.
+- [x] Self-contained Windows x64 single-executable publish profile; embedded Release symbols.
+- [x] Five portable-path/migration tests; 40 total tests pass.
+- [ ] Revisit secure credential migration and WebView2 runtime/cache portability in Milestone D.

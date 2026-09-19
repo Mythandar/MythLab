@@ -15,9 +15,9 @@
    <TextBlock Text="Probe timeout (milliseconds, 100–10000)"/>
    <TextBox Text="{Binding ProbeTimeout, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Probe timeout"/>
    <Button Content="_Save settings" Command="{Binding SaveSettingsCommand}" HorizontalAlignment="Left" Margin="0,6,0,24"/>
-   <TextBlock Text="Application data" FontSize="18" FontWeight="SemiBold"/>
+   <TextBlock Text="Portable application data" FontSize="18" FontWeight="SemiBold"/>
    <TextBox Text="{Binding DataDirectory, Mode=OneWay}" IsReadOnly="True" AutomationProperties.Name="Application data directory"/>
-   <TextBlock Text="inventory.db stores devices. settings.json stores preferences. The logs folder retains up to seven rolling log files." Opacity=".65"/>
+   <TextBlock Text="This Data folder moves with the executable. Close the app before copying it. inventory.db stores devices. settings.json stores preferences. The logs folder retains up to seven rolling log files." Opacity=".65"/>
   </StackPanel>
  </ScrollViewer>
 </UserControl>

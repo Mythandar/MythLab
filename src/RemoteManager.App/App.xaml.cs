@@ -21,7 +21,7 @@ public partial class App : Application
         try
         {
             var paths = new AppPaths(AppIdentity.DataId);
-            paths.EnsureCreated();
+            var imported = await PortableDataSetup.PrepareAsync(paths, lifetime.Token);
             var recent = new RecentLogSink();
             Log.Logger = new LoggerConfiguration().MinimumLevel.Information()
                 .WriteTo.Sink(recent)
@@ -45,6 +45,7 @@ public partial class App : Application
             var model = services.GetRequiredService<ShellViewModel>();
             model.ApplySettings(settings);
             await model.LoadAsync(lifetime.Token);
+            if (imported) model.Notice = "Previous inventory and settings copied into the portable Data folder. Original files were kept.";
             MainWindow = services.GetRequiredService<MainWindow>();
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             Log.Information("Application started; inventory schema {SchemaVersion}", 1);
@@ -54,7 +55,7 @@ public partial class App : Application
         {
             // Exception text can contain user-controlled configuration; log only the category.
             Log.Error("Startup failed; category {FailureCategory}", ex.GetType().Name);
-            MessageBox.Show("The application could not open its data. Check data-folder permissions, settings.json, and the diagnostics log. No data has been reset.",
+            MessageBox.Show("The application could not open its portable Data folder beside the executable. Keep the app in a writable folder, outside Program Files. Check Data/settings.json and Data/logs if present. No existing data has been reset.",
                 AppIdentity.DisplayName, MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
         }

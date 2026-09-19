@@ -25,3 +25,5 @@ Exact installed versions are recorded in Directory.Packages.props and packages.l
 | [WebView2 Runtime](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution) | Microsoft runtime distribution terms | Prefer Evergreen, document deployment prerequisite |
 
 RealVNC and Moonlight are independently installed programs, not dependencies distributed by this project. No terminal library, browser runtime or external launcher is redistributed yet. This is an engineering inventory, not a license chosen for the new application's own source.
+
+Portable publishing also resolves Microsoft.NET.ILLink.Tasks 10.0.11 (MIT) as SDK build tooling. It does not enable trimming. The self-contained executable embeds the Windows .NET runtime; preserve its redistribution notices when packaging a release for others.
