@@ -1,0 +1,59 @@
+<UserControl x:Class="RemoteManager.App.Views.DevicesView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <Grid Margin="8">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+  <DockPanel>
+   <StackPanel><TextBlock Text="My Devices" FontSize="28" FontWeight="SemiBold"/><TextBlock Text="{Binding InventorySummary}" Margin="0,6,0,0" Opacity=".65"/></StackPanel>
+   <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+    <Button Content="_Reload" Command="{Binding RefreshCommand}"/>
+    <Button Content="_Add device" Command="{Binding AddCommand}"/>
+   </StackPanel>
+  </DockPanel>
+  <TextBox Grid.Row="1" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Margin="0,20,8,12"
+   AutomationProperties.Name="Search devices" ToolTip="Search name, hostname, IP, MAC, group or tags"/>
+  <TextBlock Grid.Row="2" Text="Status monitoring and connection actions arrive in the next milestones." Opacity=".65" Margin="0,0,0,16"/>
+  <Grid Grid.Row="3">
+   <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsEmpty, Converter={StaticResource BoolVisibility}}">
+    <TextBlock Text="Your devices, in one place" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+    <TextBlock Text="Add your first computer or server to build your inventory." Margin="0,10,0,18" HorizontalAlignment="Center"/>
+    <Button Content="Add your _first device" Command="{Binding AddCommand}" HorizontalAlignment="Center"/>
+   </StackPanel>
+   <ListBox ItemsSource="{Binding FilteredDevices}" Background="Transparent" BorderThickness="0"
+    HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+    AutomationProperties.Name="Managed devices">
+    <ListBox.Style><Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}"><Style.Triggers><DataTrigger Binding="{Binding IsEmpty}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></ListBox.Style>
+    <ListBox.ItemContainerStyle>
+     <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}"><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0,0,8,12"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
+    </ListBox.ItemContainerStyle>
+    <ListBox.ItemTemplate>
+     <DataTemplate>
+      <Border BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" BorderThickness="1" CornerRadius="8" Padding="20">
+       <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel>
+         <TextBlock Text="{Binding DisplayName}" FontSize="20" FontWeight="SemiBold"/>
+         <TextBlock Text="{Binding Endpoint}" Margin="0,4,0,0"/>
+         <TextBlock Text="{Binding IPv4Address}" Opacity=".65"/>
+         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+          <TextBlock Text="{Binding Type}" Opacity=".65" Margin="0,0,14,0"/>
+          <TextBlock Text="{Binding Group}" FontWeight="SemiBold"/>
+         </StackPanel>
+         <TextBlock Text="{Binding Notes}" MaxHeight="40" TextTrimming="CharacterEllipsis" Margin="0,6,16,0" Opacity=".65"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+         <TextBlock Text="●  Unknown" HorizontalAlignment="Right" Margin="0,0,8,8" ToolTip="No live status check has been performed."/>
+         <TextBlock Text="{Binding Wake.Capability, StringFormat='WoL: {0}'}" FontSize="12" Opacity=".65" HorizontalAlignment="Right" Margin="0,0,8,14"/>
+         <StackPanel Orientation="Horizontal">
+          <Button Content="_Edit" Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+          <Button Content="_Delete" Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+         </StackPanel>
+        </StackPanel>
+       </Grid>
+      </Border>
+     </DataTemplate>
+    </ListBox.ItemTemplate>
+   </ListBox>
+  </Grid>
+ </Grid>
+</UserControl>

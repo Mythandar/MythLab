@@ -1,0 +1,176 @@
+﻿[
+    {
+        "package":  "CommunityToolkit.Mvvm/8.4.0",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://github.com/CommunityToolkit/dotnet"
+    },
+    {
+        "package":  "Microsoft.CodeCoverage/17.14.1",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://github.com/microsoft/vstest"
+    },
+    {
+        "package":  "Microsoft.Data.Sqlite.Core/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://docs.microsoft.com/dotnet/standard/data/sqlite/"
+    },
+    {
+        "package":  "Microsoft.Data.Sqlite/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://docs.microsoft.com/dotnet/standard/data/sqlite/"
+    },
+    {
+        "package":  "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://dot.net/"
+    },
+    {
+        "package":  "Microsoft.Extensions.DependencyInjection/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://dot.net/"
+    },
+    {
+        "package":  "Microsoft.Extensions.Logging.Abstractions/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://dot.net/"
+    },
+    {
+        "package":  "Microsoft.Extensions.Logging/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://dot.net/"
+    },
+    {
+        "package":  "Microsoft.Extensions.Options/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://dot.net/"
+    },
+    {
+        "package":  "Microsoft.Extensions.Primitives/10.0.11",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://dot.net/"
+    },
+    {
+        "package":  "Microsoft.NET.Test.Sdk/17.14.1",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://github.com/microsoft/vstest"
+    },
+    {
+        "package":  "Microsoft.TestPlatform.ObjectModel/17.14.1",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://github.com/microsoft/vstest"
+    },
+    {
+        "package":  "Microsoft.TestPlatform.TestHost/17.14.1",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://github.com/microsoft/vstest"
+    },
+    {
+        "package":  "Newtonsoft.Json/13.0.3",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://www.newtonsoft.com/json"
+    },
+    {
+        "package":  "Serilog.Extensions.Logging/10.0.0",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  "https://github.com/serilog/serilog-extensions-logging"
+    },
+    {
+        "package":  "Serilog.Sinks.File/7.0.0",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  "https://github.com/serilog/serilog-sinks-file"
+    },
+    {
+        "package":  "Serilog/4.2.0",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  "https://serilog.net/"
+    },
+    {
+        "package":  "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "SQLitePCLRaw.core/2.1.12",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "xunit.abstractions/2.0.3",
+        "licenseType":  "legacy-url",
+        "license":  "https://raw.githubusercontent.com/xunit/xunit/master/license.txt",
+        "projectUrl":  "https://github.com/xunit/xunit"
+    },
+    {
+        "package":  "xunit.analyzers/1.18.0",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "xunit.assert/2.9.3",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "xunit.core/2.9.3",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "xunit.extensibility.core/2.9.3",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "xunit.extensibility.execution/2.9.3",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "xunit.runner.visualstudio/3.1.1",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "xunit/2.9.3",
+        "licenseType":  "expression",
+        "license":  "Apache-2.0",
+        "projectUrl":  null
+    }
+]

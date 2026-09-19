@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <AppDisplayName>RemoteManager</AppDisplayName>
+    <AppAssemblyPrefix>RemoteManager</AppAssemblyPrefix>
+    <AppDataId>Homelab.RemoteManager</AppDataId>
+    <Product>$(AppDisplayName)</Product>
+    <AssemblyTitle>$(AppDisplayName)</AssemblyTitle>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="AppDisplayName" Value="$(AppDisplayName)" />
+    <AssemblyMetadata Include="AppDataId" Value="$(AppDataId)" />
+  </ItemGroup>
+</Project>

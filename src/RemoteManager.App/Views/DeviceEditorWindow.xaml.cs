@@ -1,0 +1,26 @@
+using System.ComponentModel;
+using System.Windows;
+using RemoteManager.App.ViewModels;
+
+namespace RemoteManager.App.Views;
+
+public partial class DeviceEditorWindow : Window
+{
+    private readonly DeviceEditorViewModel model;
+    private bool saved;
+    public DeviceEditorWindow(DeviceEditorViewModel model)
+    {
+        this.model = model;
+        InitializeComponent();
+        DataContext = model;
+        model.Saved += OnSaved;
+        Loaded += (_, _) => NameInput.Focus();
+        Closing += OnClosing;
+        Closed += (_, _) => model.Saved -= OnSaved;
+    }
+    private void OnSaved(object? sender, EventArgs e) { saved = true; DialogResult = true; }
+    private void OnClosing(object? sender, CancelEventArgs e)
+    {
+        if (model.IsBusy && !saved) e.Cancel = true;
+    }
+}
