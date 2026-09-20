@@ -31,7 +31,7 @@
     AutomationProperties.Name="Discovery progress"/>
    <TextBlock Text="{Binding Message}" AutomationProperties.LiveSetting="Polite"/>
    <TextBlock Text="{Binding Diagnostic}" Margin="0,4,0,0"/>
-   <TextBlock Text="Online = ping reply or this computer. ARP/cache entries may be stale. Discovery cannot determine Wake-on-LAN support." FontSize="12" Opacity=".65" Margin="0,8,0,12"/>
+   <TextBlock Text="Online = ping reply or this computer. Scan read time is not when a cached device was last alive. Discovery cannot determine Wake-on-LAN support." FontSize="12" Opacity=".65" Margin="0,8,0,12"/>
   </StackPanel>
   <DataGrid Grid.Row="4" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResult}"
    AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
@@ -51,7 +51,7 @@
     <DataGridTextColumn Header="State" Binding="{Binding Device.StateLabel}" Width="100"/>
     <DataGridTextColumn Header="Inventory" Binding="{Binding ManagedLabel}" Width="200"/>
     <DataGridTextColumn Header="Evidence" Binding="{Binding Device.Evidence}" Width="170"/>
-    <DataGridTextColumn Header="Observed" Binding="{Binding Device.ObservedAt, StringFormat=HH:mm:ss}" Width="85"/>
+    <DataGridTextColumn Header="Scan read" Binding="{Binding Device.EvidenceCollectedAt, StringFormat=HH:mm:ss}" Width="85"/>
     <DataGridTextColumn Header="Vendor (if known)" Binding="{Binding Device.Vendor}" Width="140"/>
    </DataGrid.Columns>
   </DataGrid>

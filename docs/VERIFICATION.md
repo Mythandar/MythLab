@@ -62,3 +62,11 @@ WPF smoke now selects Light/Dark/System through the actual Settings ComboBox, ve
 - Display name and executable assembly name are now MythLab through build/Identity.props. Solution, projects, namespaces and WPF XAML identities were renamed.
 - Portable Data remains beside MythLab.exe. AppDataId deliberately remains Homelab.RemoteManager so an older nonportable inventory can still be imported once.
 - Release build: zero warnings/errors. 93 automated tests passed; WPF smoke passed with no binding errors. Published a one-file MythLab.exe; no new dependencies and no remote created.
+
+## Pre-Milestone D repository review — 2026-09-20
+- Discovery now reuses a usable MAC from the selected interface's neighbor cache instead of calling direct SendARP for that address. It still performs the live ping. Invalid cache MACs are ignored, and wrong-interface entries do not suppress ARP.
+- The Discovery grid labels its timestamp “Scan read”; it is the time evidence was collected by the scan, not a cache entry's remote last-alive time. A separate live observation timestamp supplies LastSeen only after ping/local-interface evidence. Neighbor-cache evidence alone remains Discovered.
+- Status checks try distinct resolved IPv4 addresses within one overall DNS/check timeout. Time is reserved for later addresses; DNS failure, check failure, timeout and caller cancellation remain distinct. Two loopback tests exercise TCP behavior locally and are tagged LocalNetwork.
+- Windows CI uses windows-2022, the .NET 10 SDK selected by global.json (10.0.400 feature band), locked restore, Release build, and only offline automated tests with read-only repository permissions. WPF smoke and LocalNetwork-tagged tests remain local.
+- Root project licensing remains undecided. Dependency licenses do not grant a MythLab project license.
+- Local locked restore passed. Release build passed with zero warnings/errors. Complete automated suite: 97 passed (57 Core, 40 Infrastructure). CI-filtered local selection: 95 passed (57 Core, 38 Infrastructure). Local WPF smoke passed with no binding errors. No live LAN scan or WoL packet was sent during verification.

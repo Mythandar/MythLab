@@ -1,5 +1,7 @@
 # Dependencies and licenses
 
+These notices describe dependencies only. MythLab has no root project license yet; the repository owner must select one if the project is intended for open-source reuse. Do not infer a project license from dependency licenses.
+
 Exact installed versions are recorded in Directory.Packages.props and packages.lock.json. The generated docs/dependency-licenses.json inventories every resolved direct/transitive NuGet package and its package license metadata. Re-run tools/Write-DependencyLicenses.ps1 after dependency changes. Keep copyright/license files with distributed dependencies.
 
 ## Foundation choices

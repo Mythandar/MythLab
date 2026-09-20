@@ -17,7 +17,10 @@ public sealed record DiscoveredDevice(string Address)
     public string Hostname { get; init; } = "";
     public string Vendor { get; init; } = "";
     public DiscoveryEvidence Evidence { get; init; }
-    public DateTimeOffset ObservedAt { get; init; } = DateTimeOffset.UtcNow;
+    /// <summary>When this scan read evidence; a cache entry may have been learned much earlier.</summary>
+    public DateTimeOffset EvidenceCollectedAt { get; init; } = DateTimeOffset.UtcNow;
+    /// <summary>When ping replied or the selected local interface was observed during this scan.</summary>
+    public DateTimeOffset? LastLiveObservationAt { get; init; }
     public bool IsOnline => (Evidence & (DiscoveryEvidence.PingReply | DiscoveryEvidence.LocalInterface)) != 0;
     public string StateLabel => IsOnline ? "Online" : "Discovered";
     public Device ToDevice() => new()
@@ -25,7 +28,7 @@ public sealed record DiscoveredDevice(string Address)
         DisplayName = Hostname.Length == 0 ? Address : Hostname, Hostname = Hostname,
         IPv4Address = Address, MacAddress = MacAddress,
         LastKnownState = IsOnline ? DeviceState.Online : DeviceState.Unknown,
-        LastSeen = IsOnline ? ObservedAt : null
+        LastSeen = IsOnline ? LastLiveObservationAt : null
         // Wake is deliberately Disabled: discovery cannot determine wake support.
     };
 }

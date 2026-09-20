@@ -5,12 +5,12 @@ Select an active IPv4 interface, review the Start/End range and Scan. Cancel sto
 ## Evidence and limits
 - Online means an ICMP reply during this scan or the selected local interface.
 - Discovered means neighbor-cache/ARP evidence without verified availability. Ping replies are not required.
-- Observed time is when this scan gathered evidence, not when a cached neighbor last answered.
+- Scan read time is when this scan collected evidence. Windows does not provide the remote device's last-alive time through this cache read. When adding a discovered device, its last-seen time is set only by a live ping/local-interface observation, not by cache evidence. Later monitoring may update it from its configured ICMP or TCP check.
 - MAC/IP/hostname matches mark a row managed. An IP match can be a DHCP collision; review the existing device rather than automatically overwriting it.
 - WoL defaults Disabled. Discovery cannot determine wake support.
 - Vendor lookup has an optional offline provider boundary, but no OUI database or online lookup is included.
 - VLAN boundaries, Wi-Fi isolation, firewalls, proxy ARP and sleeping devices affect discovery. Missing results do not prove absence.
-- This is not continuous monitoring. Managed live status and wake transport are Milestone C.
+- This screen is a scan snapshot. Managed-device status uses Milestone C's separate polling checks.
 
 ## Implementation
 Core validates decimal IPv4 addresses, contiguous masks and ranges including /31 and /32. Scans are capped at 4096 addresses on the selected interface's subnet. For larger subnets, the initial range contains only the local address; expand it deliberately. Settings controls worker concurrency (default 32, max 64) and ping/DNS timeout (default 750 ms).
@@ -19,7 +19,7 @@ WindowsLanProbe enumerates active non-loopback IPv4 interfaces, skipping IPv6-on
 
 Parallel.ForEachAsync bounds workers over a lazy address range. A process-wide eight-slot gate bounds SendARP calls, which cannot be cancelled natively. Cancelling releases the UI await, but each native call retains its slot until it returns. Rapid cancel/restart does not accumulate unbounded calls. ARP timeout is Windows-managed; configured ping/DNS timeouts are not total per-address deadlines. ICMP follows Windows routing; ARP explicitly selects its source. Overlapping subnets on multiple adapters can therefore have ambiguous ICMP evidence.
 
-Evidence streams before DNS completes; cache merges before and after active probing. DNS failures never discard hosts. Cache read failures produce a visible diagnostic while other probes continue. No administrator elevation or external arp/ping processes are requested.
+Evidence streams before DNS completes; cache merges before and after active probing. A usable MAC from the selected interface's cache skips a redundant direct SendARP call, while the live ping still runs. DNS failures never discard hosts. Cache read failures produce a visible diagnostic while other probes continue. No administrator elevation or external arp/ping processes are requested.
 
 ## Validation
 Normal unit/UI tests use fake network probes and never scan the LAN. They cover subnet/broadcast calculations, ranges, non-ping hosts, cache evidence, adapter changes, concurrency, cancellation, prefilled add, managed marking and shutdown.

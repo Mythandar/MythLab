@@ -121,6 +121,43 @@ public sealed class WakeAndStatusTests
                 .WakeAsync(Target, 100, TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(5), new ProgressSink()));
     }
     [Fact]
+    public async Task ResolutionFailuresAndTimeoutsRemainUnknownAndCallerCancellationPropagates()
+    {
+        var target = Target with { Hostname = "fixture.invalid", IPv4Address = "" };
+        var failed = new WindowsDeviceStatusService((_, _) =>
+            Task.FromException<IPAddress[]>(new SocketException((int)SocketError.HostNotFound)));
+        var failedResult = await failed.CheckAsync(target, 100);
+        Assert.Equal(DeviceState.Unknown, failedResult.State);
+        Assert.Contains("resolution failed", failedResult.Detail);
+
+        var unresolved = new WindowsDeviceStatusService((_, token) =>
+            Task.Delay(Timeout.Infinite, token).ContinueWith(_ => Array.Empty<IPAddress>(), token));
+        var timeoutResult = await unresolved.CheckAsync(target, 20);
+        Assert.Equal(DeviceState.Unknown, timeoutResult.State);
+        Assert.Contains("resolution timed out", timeoutResult.Detail);
+
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => unresolved.CheckAsync(target, 100, cancellation.Token));
+    }
+
+    [Fact]
+    [Trait("Category", "LocalNetwork")]
+    public async Task LaterResolvedIpv4CanSucceedWithinOneBudget()
+    {
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var target = Target with { Hostname = "fixture.invalid", IPv4Address = "",
+            StatusCheck = StatusCheckKind.Tcp, StatusPort = ((IPEndPoint)listener.LocalEndpoint).Port };
+        var checker = new WindowsDeviceStatusService((_, _) =>
+            Task.FromResult(new[] { IPAddress.Parse("127.0.0.2"), IPAddress.Loopback }));
+        var result = await checker.CheckAsync(target, 1000);
+        Assert.Equal(DeviceState.Online, result.State);
+        Assert.Contains("127.0.0.1", result.Detail);
+    }
+
+    [Fact]
+    [Trait("Category", "LocalNetwork")]
     public async Task TcpStatusWorksAgainstLoopbackOnly()
     {
         using var listener = new TcpListener(IPAddress.Loopback, 0);

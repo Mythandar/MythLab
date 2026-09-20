@@ -1,6 +1,6 @@
 # Roadmap
 
-Milestones A–C are implemented. Milestone D (credentials/integrated SSH) is next. Subsequent milestones are intentionally separate working increments, each requiring a clean build, offline tests, documentation update and local commit if Git is in use.
+Milestones A–C are implemented. The pre-D review fixed cached-MAC probing, multi-address status checks, discovery freshness wording and added Windows CI. Milestone D (credentials/integrated SSH) is next and has not started. Subsequent milestones are intentionally separate working increments, each requiring a clean build, offline tests, documentation update and local commit if Git is in use.
 
 ## A — Foundation (complete)
 - [x] Inspect environment and verify .NET 10
@@ -65,3 +65,5 @@ Milestone B verification: 72 offline tests pass (47 Core, 25 Infrastructure), WP
 UI follow-up: appearance selection now previews immediately (Save persists it), and device cards reflow by viewport width with scrolling only for overflow. Verified using real appearance control bindings and narrow/wide/short-window smoke checks.
 
 Milestone C verification: clean Release build; 93 automated tests and WPF monitoring/wake/cancellation/layout smoke passed. Portable single-executable publish succeeded. No real wake packets sent during tests. Hardware acceptance remains manual; see WAKE-ON-LAN.md and VERIFICATION.md.
+
+Pre-D review complete: cache-aware discovery without skipping live checks, truthful scan-read timestamps, multi-address status checks and offline Windows CI. Milestone D remains unstarted. See VERIFICATION.md.

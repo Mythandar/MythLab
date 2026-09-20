@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using MythLab.Core.Devices;
 using MythLab.Core.Discovery;
 
 namespace MythLab.Infrastructure.Discovery;
@@ -32,7 +33,8 @@ public sealed class NetworkDiscoveryService(ILanProbe probe, ILogger<NetworkDisc
                 Evidence = old.Evidence | device.Evidence,
                 Hostname = device.Hostname.Length > 0 ? device.Hostname : old.Hostname,
                 MacAddress = device.MacAddress.Length > 0 ? device.MacAddress : old.MacAddress,
-                Vendor = device.Vendor.Length > 0 ? device.Vendor : old.Vendor
+                Vendor = device.Vendor.Length > 0 ? device.Vendor : old.Vendor,
+                LastLiveObservationAt = device.LastLiveObservationAt ?? old.LastLiveObservationAt
             });
             progress.Report(new(Volatile.Read(ref completed), range.Count, merged));
         }
@@ -43,7 +45,7 @@ public sealed class NetworkDiscoveryService(ILanProbe probe, ILogger<NetworkDisc
                 var neighbors = await probe.ReadNeighborsAsync(cancellationToken).ConfigureAwait(false);
                 foreach (var neighbor in neighbors)
                 {
-                    if (neighbor.InterfaceIndex != request.Interface.Index) continue;
+                    if (neighbor.InterfaceIndex != request.Interface.Index || !IsUsableMac(neighbor.MacAddress)) continue;
                     var ip = Ipv4Subnet.Parse(neighbor.Address);
                     if (ip < range.Start || ip > range.End) continue;
                     Publish(new(neighbor.Address) { MacAddress = neighbor.MacAddress, Evidence = DiscoveryEvidence.NeighborCache,
@@ -71,12 +73,24 @@ public sealed class NetworkDiscoveryService(ILanProbe probe, ILogger<NetworkDisc
                 var local = address == request.Interface.Address;
                 var evidence = local ? DiscoveryEvidence.LocalInterface : DiscoveryEvidence.None;
                 string? mac = local ? request.Interface.MacAddress : null;
+                DateTimeOffset? liveObservedAt = local ? DateTimeOffset.UtcNow : null;
                 if (!local)
                 {
                     if (await probe.PingAsync(address, request.TimeoutMilliseconds, token).ConfigureAwait(false))
+                    {
                         evidence |= DiscoveryEvidence.PingReply;
-                    mac = await probe.ResolveMacAsync(request.Interface, address, token).ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(mac)) evidence |= DiscoveryEvidence.ArpResolution;
+                        liveObservedAt = DateTimeOffset.UtcNow;
+                    }
+                    // Cache evidence has already been restricted to this interface and range.
+                    // Still ping above; cached MAC data alone never establishes availability.
+                    if (results.TryGetValue(address, out var cachedMac) &&
+                        IsUsableMac(cachedMac.MacAddress))
+                        mac = cachedMac.MacAddress;
+                    else
+                    {
+                        mac = await probe.ResolveMacAsync(request.Interface, address, token).ConfigureAwait(false);
+                        if (!string.IsNullOrEmpty(mac)) evidence |= DiscoveryEvidence.ArpResolution;
+                    }
                 }
                 if (results.TryGetValue(address, out var cached))
                 {
@@ -87,6 +101,7 @@ public sealed class NetworkDiscoveryService(ILanProbe probe, ILogger<NetworkDisc
                 {
                     // Show network evidence immediately; slow or absent DNS never hides a discovered device.
                     var device = new DiscoveredDevice(address) { MacAddress = mac ?? "", Evidence = evidence,
+                        LastLiveObservationAt = liveObservedAt,
                         Vendor = mac is null ? "" : vendorLookup?.FindVendor(mac) ?? "" };
                     Publish(device);
                     var hostname = await probe.ReverseDnsAsync(address, request.TimeoutMilliseconds, token).ConfigureAwait(false);
@@ -104,5 +119,15 @@ public sealed class NetworkDiscoveryService(ILanProbe probe, ILogger<NetworkDisc
             logger.LogInformation("Discovery cancelled; addresses checked {Scanned}; found {Found}", completed, results.Count);
             throw;
         }
+    }
+    private static bool IsUsableMac(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        try
+        {
+            var bytes = Convert.FromHexString(MacAddress.Normalize(value).Replace(":", ""));
+            return (bytes[0] & 1) == 0 && bytes.Any(b => b != 0);
+        }
+        catch (ArgumentException) { return false; }
     }
 }

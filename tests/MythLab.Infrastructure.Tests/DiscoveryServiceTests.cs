@@ -31,9 +31,48 @@ public sealed class DiscoveryServiceTests
         var summary = await Create(probe).ScanAsync(Request(), progress);
         Assert.Equal(new DiscoverySummary(3, 3), summary);
         Assert.False(progress.Last("10.0.0.2").IsOnline);
+        Assert.Equal(DiscoveryEvidence.NeighborCache, progress.Last("10.0.0.2").Evidence);
+        Assert.Equal("00:11:22:33:44:02", progress.Last("10.0.0.2").MacAddress);
+        Assert.Null(progress.Last("10.0.0.2").LastLiveObservationAt);
+        Assert.Null(progress.Last("10.0.0.2").ToDevice().LastSeen);
+        Assert.DoesNotContain("10.0.0.2", probe.ArpAddresses);
         Assert.Equal("nas.local", progress.Last("10.0.0.2").Hostname);
         Assert.Equal(DiscoveryEvidence.ArpResolution, progress.Last("10.0.0.3").Evidence);
         Assert.True(progress.Last("10.0.0.4").IsOnline);
+    }
+
+    [Fact]
+    public async Task LivePingUpgradesCachedMacWithoutResolvingArpAgain()
+    {
+        var probe = new FakeProbe
+        {
+            Neighbors = [new(7, "10.0.0.2", "00:11:22:33:44:02")],
+            Online = ["10.0.0.2"]
+        };
+        var progress = new Recorder();
+        await Create(probe).ScanAsync(Request("10.0.0.2"), progress);
+        var result = progress.Last("10.0.0.2");
+        Assert.True(result.IsOnline);
+        Assert.Equal(DiscoveryEvidence.NeighborCache | DiscoveryEvidence.PingReply, result.Evidence);
+        Assert.Equal("00:11:22:33:44:02", result.MacAddress);
+        Assert.DoesNotContain("10.0.0.2", probe.ArpAddresses);
+        Assert.NotNull(result.LastLiveObservationAt);
+        Assert.Equal(result.LastLiveObservationAt, result.ToDevice().LastSeen);
+    }
+
+    [Fact]
+    public async Task UnusableCachedMacStillAllowsDirectArpResolution()
+    {
+        var probe = new FakeProbe
+        {
+            Neighbors = [new(7, "10.0.0.2", "00:00:00:00:00:00")],
+            Macs = new() { ["10.0.0.2"] = "00:11:22:33:44:02" }
+        };
+        var progress = new Recorder();
+        await Create(probe).ScanAsync(Request("10.0.0.2"), progress);
+        Assert.Contains("10.0.0.2", probe.ArpAddresses);
+        Assert.Equal("00:11:22:33:44:02", progress.Last("10.0.0.2").MacAddress);
+        Assert.False(progress.Last("10.0.0.2").IsOnline);
     }
 
     [Fact]
@@ -43,6 +82,7 @@ public sealed class DiscoveryServiceTests
             new(7, "10.0.0.50", "00:11:22:33:44:50")] };
         var summary = await Create(probe).ScanAsync(Request(), new Recorder());
         Assert.Equal(0, summary.Found);
+        Assert.Contains("10.0.0.2", probe.ArpAddresses);
     }
 
     [Fact]
@@ -114,6 +154,7 @@ public sealed class DiscoveryServiceTests
         public bool CacheFailure { get; init; }
         public bool Block { get; init; }
         public int Delay { get; init; }
+        public ConcurrentBag<string> ArpAddresses { get; } = [];
         public int PingCalls;
         public int InterfaceCalls;
         public int Peak;
@@ -140,8 +181,11 @@ public sealed class DiscoveryServiceTests
             }
             finally { Interlocked.Decrement(ref active); }
         }
-        public Task<string?> ResolveMacAsync(LocalNetworkInterface network, string address, CancellationToken cancellationToken) =>
-            Task.FromResult(Macs.GetValueOrDefault(address));
+        public Task<string?> ResolveMacAsync(LocalNetworkInterface network, string address, CancellationToken cancellationToken)
+        {
+            ArpAddresses.Add(address);
+            return Task.FromResult(Macs.GetValueOrDefault(address));
+        }
         public Task<string?> ReverseDnsAsync(string address, int timeoutMilliseconds, CancellationToken cancellationToken) =>
             Task.FromResult(Names.GetValueOrDefault(address));
     }
