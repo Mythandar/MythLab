@@ -1,7 +1,7 @@
 # Architecture
 
 ## Scope and environment
-Milestones A–C provide a working Windows inventory, LAN discovery, live status and Wake-on-LAN, not a v0.1 feature-complete release. Inspected 2026-09-19: Windows 11 x64 (10.0.26200), .NET SDK 10.0.400, Windows Desktop runtime 10.0.11, Git 2.55. No extra workloads required for WPF. No inherited AGENTS.md found. Local directory: D:\projects\repos\RemoteManager. No GitHub remote.
+Milestones A–C provide a working Windows inventory, LAN discovery, live status and Wake-on-LAN, not a v0.1 feature-complete release. Inspected 2026-09-19: Windows 11 x64 (10.0.26200), .NET SDK 10.0.400, Windows Desktop runtime 10.0.11, Git 2.55. No extra workloads required for WPF. No inherited AGENTS.md found. The local Git repository has no GitHub remote.
 
 ## Structure and dependencies
 - App: net10.0-windows WPF, MVVM with CommunityToolkit.Mvvm, built-in WPF Fluent theme. No browser-based app shell.
@@ -12,7 +12,7 @@ Milestones A–C provide a working Windows inventory, LAN discovery, live status
 - Exact dependency versions and licenses: THIRD-PARTY-NOTICES.md and NuGet lock files.
 
 ## Naming
-build/Identity.props is the authoritative location for display name, assembly prefix and stable internal identity. It supplies executable version resources and generated AppIdentity constants. Project folders, .slnx and internal namespaces remain neutral RemoteManager names; a later public name does not require changing namespaces. If internal names must also change, rename the projects/folders and replace RemoteManager namespaces in one dedicated refactor. Keep the data-directory identity stable or implement an explicit migration. No installer, logos, or splash screen yet; an eventual installer must import Identity.props.
+build/Identity.props is the authoritative location for the MythLab display name and executable assembly name. It supplies executable version resources and generated AppIdentity constants. The solution, project folders and namespaces use MythLab. AppDataId deliberately remains Homelab.RemoteManager: it locates the pre-portable inventory for one-time import and must not change without a migration. The active portable Data folder is beside the executable and does not depend on this ID. No installer, logo or splash screen exists yet; an eventual installer must import Identity.props.
 
 ## Domain and persistence
 Device has a GUID independent of address, descriptive metadata, last observation, status-check configuration and unverified/verified WoL settings. ConnectionProfile has its own GUID and device foreign key; many profiles can belong to one device. CredentialReference is separate reusable metadata; profile rows reference its GUID. No secret-bearing property exists in serializable models. Authentication type and private-key path belong to credential metadata; saved passwords/passphrases will live only in Windows Credential Manager (Milestone D).

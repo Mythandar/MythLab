@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MythLab.Core/MythLab.Core.csproj" />
+    <Project Path="src/MythLab.Infrastructure/MythLab.Infrastructure.csproj" />
+    <Project Path="src/MythLab.App/MythLab.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MythLab.Core.Tests/MythLab.Core.Tests.csproj" />
+    <Project Path="tests/MythLab.Infrastructure.Tests/MythLab.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

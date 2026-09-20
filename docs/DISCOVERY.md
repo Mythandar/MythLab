@@ -27,7 +27,7 @@ Normal unit/UI tests use fake network probes and never scan the LAN. They cover 
 An explicit optional live smoke enumerates Windows adapters/cache and probes at most one already-cached on-subnet neighbor:
 
 ```powershell
-dotnet run --project tools/RemoteManager.SmokeTests -c Release -- --network-smoke
+dotnet run --project tools/MythLab.SmokeTests -c Release -- --network-smoke
 ```
 
 Sources: [GetIpNetTable](https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getipnettable), [MIB_IPNETROW](https://learn.microsoft.com/en-us/windows/win32/api/ipmib/ns-ipmib-mib_ipnetrow_lh), [SendARP](https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-sendarp).

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><AssemblyName>$(AppAssemblyPrefix)</AssemblyName></PropertyGroup>
+<ItemGroup>
+<ProjectReference Include="../MythLab.Infrastructure/MythLab.Infrastructure.csproj" />
+<PackageReference Include="CommunityToolkit.Mvvm" />
+<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+<PackageReference Include="Microsoft.Extensions.Logging" />
+<PackageReference Include="Serilog.Extensions.Logging" />
+<PackageReference Include="Serilog.Sinks.File" />
+</ItemGroup>
+</Project>

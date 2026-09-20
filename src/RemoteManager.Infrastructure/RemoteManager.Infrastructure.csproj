@@ -1,4 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-<PropertyGroup><AssemblyName>$(AppAssemblyPrefix).Infrastructure</AssemblyName></PropertyGroup>
-<ItemGroup><ProjectReference Include="../RemoteManager.Core/RemoteManager.Core.csproj" /><PackageReference Include="Microsoft.Data.Sqlite" /><PackageReference Include="Microsoft.Extensions.Logging.Abstractions" /></ItemGroup>
-</Project>

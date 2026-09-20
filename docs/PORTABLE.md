@@ -4,17 +4,17 @@
 Publish from the repository root:
 
 ```powershell
-dotnet publish src/RemoteManager.App -p:PublishProfile=Portable
+dotnet publish src/MythLab.App -p:PublishProfile=Portable
 ```
 
-The Windows x64 output is artifacts/portable/RemoteManager.exe. Copy it into a writable folder and run it. The public display name remains configurable in build/Identity.props.
+The Windows x64 output is artifacts/portable/MythLab.exe. Copy it into a writable folder and run it. MythLab's display name and executable assembly name are configured in build/Identity.props. The legacy data ID remains Homelab.RemoteManager for one-time import compatibility.
 
 The shipped application is one executable, with .NET 10 and native SQLite bundled. No SDK or separately installed .NET runtime is required. Normal builds under bin still contain developer dependency files; distribute the publish output, not bin. Release debugging symbols are embedded in the assemblies.
 
 After use, the folder looks like:
 
 ```text
-RemoteManager.exe
+MythLab.exe
 Data/
   inventory.db
   settings.json

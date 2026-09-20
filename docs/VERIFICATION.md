@@ -13,12 +13,12 @@
 
 ## Reproduce
 ```powershell
-dotnet restore RemoteManager.slnx --locked-mode
-dotnet build RemoteManager.slnx -c Release --no-restore
-dotnet test RemoteManager.slnx -c Release --no-build
-dotnet run --project tools/RemoteManager.SmokeTests -c Release
+dotnet restore MythLab.slnx --locked-mode
+dotnet build MythLab.slnx -c Release --no-restore
+dotnet test MythLab.slnx -c Release --no-build
+dotnet run --project tools/MythLab.SmokeTests -c Release
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/Write-DependencyLicenses.ps1
-dotnet list RemoteManager.slnx package --vulnerable --include-transitive
+dotnet list MythLab.slnx package --vulnerable --include-transitive
 ```
 
 ## Limits and manual follow-up
@@ -31,7 +31,7 @@ The only diagnostic opt-in is WPF0001 in ThemeManager: WPF marks dynamic ThemeMo
 ## Portable follow-up — 2026-09-19
 - Release build: zero warnings/errors. 40 tests passed (26 Core, 14 Infrastructure).
 - Added executable-relative path, fresh portable setup, existing-folder protection, committed WAL/settings migration, and failed-import rollback tests.
-- Published app output contains exactly RemoteManager.exe, approximately 63.4 MiB, with .NET and SQLite bundled.
+- Published app output contains exactly MythLab.exe, approximately 63.4 MiB, with .NET and SQLite bundled.
 - Published and executed the WPF smoke harness as a self-contained single-file Windows x64 executable; all existing UI/SQLite checks passed. This validates the deployment mechanism, not a manual interactive launch of the final application.
 - Normal locked restore passes. Portable publishing has its own packages.portable.lock.json because the RID and SDK single-file build tooling change restore requirements.
 - Package inventory now includes the SDK-added Microsoft.NET.ILLink.Tasks (MIT); trimming remains disabled. Restore with -p:PublishProfile=Portable before regenerating the complete publish-time license inventory.
@@ -55,6 +55,10 @@ WPF smoke now selects Light/Dark/System through the actual Settings ComboBox, ve
 - 93 automated tests passed (57 Core, 36 Infrastructure). New coverage checks all magic-packet bytes, invalid MACs, real-mask routing, ambiguous/missing interfaces, configured burst sends, cancellation, timeout, already-online and unknown-baseline verification rules, and status/edit/delete races.
 - Wake transport is replaced by fakes in tests. The production TCP checker is tested only against a temporary loopback listener; no Internet, LAN scan or real wake packet is required.
 - WPF smoke passed with no binding errors: ten managed devices reached Online with exactly eight simultaneous probes at peak; Test Wake persisted verification; cancelling a wake restored controls; closing drained wake, monitoring and discovery. Existing theme and responsive-card checks still pass. Reviewed dark-mode verified-wake rendering.
-- Locked portable publish succeeded: artifacts/portable/RemoteManager.exe, 66,511,936 bytes (about 63.4 MiB), one executable. Existing portable Data remains untouched.
+- Locked portable publish succeeded: artifacts/portable/MythLab.exe, 66,511,936 bytes (about 63.4 MiB), one executable. Existing portable Data remains untouched.
 - No new packages or license changes. App/Core/Infrastructure boundaries remain intact.
 - Physical waking and target-specific BIOS/NIC/firewall settings still need manual acceptance on a known supported computer. Automated tests deliberately cannot establish real hardware support. See WAKE-ON-LAN.md.
+## MythLab rename — 2026-09-20
+- Display name and executable assembly name are now MythLab through build/Identity.props. Solution, projects, namespaces and WPF XAML identities were renamed.
+- Portable Data remains beside MythLab.exe. AppDataId deliberately remains Homelab.RemoteManager so an older nonportable inventory can still be imported once.
+- Release build: zero warnings/errors. 93 automated tests passed; WPF smoke passed with no binding errors. Published a one-file MythLab.exe; no new dependencies and no remote created.

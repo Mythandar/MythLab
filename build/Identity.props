@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <AppDisplayName>RemoteManager</AppDisplayName>
-    <AppAssemblyPrefix>RemoteManager</AppAssemblyPrefix>
+    <AppDisplayName>MythLab</AppDisplayName>
+    <AppAssemblyPrefix>MythLab</AppAssemblyPrefix>
     <AppDataId>Homelab.RemoteManager</AppDataId>
     <Product>$(AppDisplayName)</Product>
     <AssemblyTitle>$(AppDisplayName)</AssemblyTitle>
