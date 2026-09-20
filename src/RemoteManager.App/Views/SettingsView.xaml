@@ -6,6 +6,7 @@
    <TextBlock Text="Settings" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,20"/>
    <TextBlock Text="Appearance"/>
    <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" AutomationProperties.Name="Theme"/>
+   <TextBlock Text="Appearance changes preview immediately. Save settings to keep your preference." Opacity=".65" Margin="0,0,0,8"/>
    <TextBlock Text="Network defaults" FontSize="18" FontWeight="SemiBold" Margin="0,14,0,6"/>
    <TextBlock Text="Discovery uses these values on its next scan. Status polling will be used when monitoring is available." Margin="0,0,0,16" Opacity=".65"/>
    <TextBlock Text="Status polling interval (seconds, 5–3600)"/>

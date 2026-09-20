@@ -55,6 +55,7 @@ public partial class ShellViewModel : ObservableObject
                 value.Contains(Search.Trim(), StringComparison.OrdinalIgnoreCase)));
     }
 
+    partial void OnThemeChanged(AppTheme value) => ThemeManager.Apply(value);
     partial void OnSearchChanged(string value) => FilteredDevices.Refresh();
     partial void OnIsBusyChanged(bool value)
     {

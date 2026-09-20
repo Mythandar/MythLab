@@ -61,3 +61,5 @@ ConPTY, tabs, tray mode, scheduled wake, SFTP, jump hosts, shutdown, integration
 - [ ] Implement missing-credential recovery and terminal-only runtime detection in Milestone D (see DATA-SECURITY.md).
 
 Milestone B verification: 72 offline tests pass (47 Core, 25 Infrastructure), WPF scan/add/cancel smoke passes, and an explicit one-host live smoke verified Windows adapter/ARP interop. Release packaging remains one self-contained executable. No OUI database, status monitor or wake transport yet.
+
+UI follow-up: appearance selection now previews immediately (Save persists it), and device cards reflow by viewport width with scrolling only for overflow. Verified using real appearance control bindings and narrow/wide/short-window smoke checks.

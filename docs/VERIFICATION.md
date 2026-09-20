@@ -45,3 +45,6 @@ The only diagnostic opt-in is WPF0001 in ThemeManager: WPF marks dynamic ThemeMo
 - NuGet vulnerability query: no known vulnerable packages reported by configured sources. No new third-party library; Infrastructure now directly references the existing Microsoft.Extensions.Logging.Abstractions package (MIT).
 - Portable executable rebuilt; existing Data directory preserved. Missing-secret recovery, SSH trust storage and WebView2 runtime detection remain Milestone D implementation gates; they are documented, not advertised as implemented.
 - Remaining manual checks: full subnet discovery on the target LAN, cancellation during native ARP delays, overlapping/VPN adapters, DPI/keyboard/accessibility. OUI lookup is a provider boundary without a bundled database. Monitor/WoL transport remain Milestone C.
+
+## Appearance and card-layout fix
+WPF smoke now selects Light/Dark/System through the actual Settings ComboBox, verifies theme brush changes before Save and persistence after Save, and checks six cards at 920/1600-DIP window widths. Narrow mode uses one column; wide mode uses at least three with no vertical scroll when cards fit; reducing window height restores scrolling. Wide dark and narrow light renderings were visually reviewed. Existing discovery/shutdown smoke checks still pass.

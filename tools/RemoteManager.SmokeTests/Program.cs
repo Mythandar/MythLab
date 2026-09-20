@@ -137,6 +137,50 @@ internal static class Program
                 foreach (var device in shell.Devices.ToArray()) await repository.DeleteAsync(device.Id);
                 await shell.LoadAsync();
                 Require(shell.IsEmpty, "Deleted device must disappear.");
+                // Exercise the same bound appearance control a user selects, not ThemeManager directly.
+                var appearanceTabs = Find<TabControl>((DependencyObject)main.Content)!;
+                appearanceTabs.SelectedIndex = 3;
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                var settingsView = Find<SettingsView>((DependencyObject)main.Content)!;
+                var themePicker = Find<ComboBox>(settingsView)!;
+                themePicker.SelectedItem = AppTheme.System;
+                themePicker.SelectedItem = AppTheme.Light;
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                var lightForeground = ((SolidColorBrush)main.FindResource("WindowForeground")).Color;
+                themePicker.SelectedItem = AppTheme.Dark;
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                var darkForeground = ((SolidColorBrush)main.FindResource("WindowForeground")).Color;
+                Require(shell.Theme == AppTheme.Dark && lightForeground != darkForeground,
+                    "Appearance selection must immediately change actual theme brushes without Save.");
+                await shell.SaveSettingsCommand.ExecuteAsync(null);
+                Require((await settings.LoadAsync()).Theme == AppTheme.Dark, "The selected appearance must persist when saved.");
+                themePicker.SelectedItem = AppTheme.System;
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Require(shell.Theme == AppTheme.System, "System appearance must be selectable.");
+                themePicker.SelectedItem = AppTheme.Light;
+                for (var i = 1; i <= 6; i++)
+                    await repository.SaveAsync(new Device { DisplayName = $"Layout device {i}", Hostname = $"layout-{i}.local",
+                        Group = "Lab", Notes = "Responsive card layout fixture." });
+                await shell.LoadAsync();
+                appearanceTabs.SelectedIndex = 0;
+                main.Width = 920;
+                main.Height = 1000;
+                await RenderAsync(main, "cards-narrow-light.png");
+                var panel = Find<ResponsiveCardsPanel>((DependencyObject)main.Content)!;
+                var list = Find<ListBox>((DependencyObject)main.Content)!;
+                var scroll = Find<ScrollViewer>(list)!;
+                int FirstRowCount() => panel.Children.Cast<UIElement>().Count(child =>
+                    Math.Abs(child.TranslatePoint(new Point(), panel).Y - panel.Children[0].TranslatePoint(new Point(), panel).Y) < 1);
+                Require(FirstRowCount() == 1 && scroll.ScrollableHeight > 0, "Narrow inventory must use one column and scroll when needed.");
+                main.Width = 1600;
+                await RenderAsync(main, "cards-wide-light.png");
+                Require(FirstRowCount() >= 3, "Wide inventory must flow into at least three columns.");
+                Require(scroll.ScrollableHeight < 1, "Fitting cards must not require vertical scrolling.");
+                shell.Theme = AppTheme.Dark;
+                await RenderAsync(main, "cards-wide-dark.png");
+                main.Height = 640;
+                await RenderAsync(main, "cards-short-dark.png");
+                Require(scroll.ScrollableHeight > 0, "Short windows must still allow scrolling to every card.");
                 fakeProbe.Block = true;
                 var shutdownScan = discovery.ScanCommand.ExecuteAsync(null);
                 main.Close();
