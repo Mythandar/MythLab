@@ -7,9 +7,11 @@ namespace RemoteManager.App.Views;
 
 public sealed class DeviceDialogs(IDeviceRepository repository, ILoggerFactory loggerFactory)
 {
-    public bool Edit(Device? device)
+    public bool AddDiscovered(Core.Discovery.DiscoveredDevice discovery) => Edit(discovery.ToDevice(), isNew: true);
+
+    public bool Edit(Device? device, bool isNew = false)
     {
-        var model = new DeviceEditorViewModel(repository, loggerFactory.CreateLogger<DeviceEditorViewModel>(), device);
+        var model = new DeviceEditorViewModel(repository, loggerFactory.CreateLogger<DeviceEditorViewModel>(), device, isNew);
         var dialog = new DeviceEditorWindow(model) { Owner = Application.Current.MainWindow };
         return dialog.ShowDialog() == true;
     }

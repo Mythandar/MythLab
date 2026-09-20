@@ -35,3 +35,13 @@ The only diagnostic opt-in is WPF0001 in ThemeManager: WPF marks dynamic ThemeMo
 - Published and executed the WPF smoke harness as a self-contained single-file Windows x64 executable; all existing UI/SQLite checks passed. This validates the deployment mechanism, not a manual interactive launch of the final application.
 - Normal locked restore passes. Portable publishing has its own packages.portable.lock.json because the RID and SDK single-file build tooling change restore requirements.
 - Package inventory now includes the SDK-added Microsoft.NET.ILLink.Tasks (MIT); trimming remains disabled. Restore with -p:PublishProfile=Portable before regenerating the complete publish-time license inventory.
+
+## Milestone B — portable policy and LAN discovery
+- Release build: zero warnings/errors. 72 tests passed (47 Core, 25 Infrastructure), no failures/skips.
+- Offline coverage now includes subnet/broadcast/mask/range rules, non-ping ARP/cache results, interface/range isolation, concurrency, cancellation, changed adapters and cache failures.
+- Portable boundary tests verify known-host/WebView2 paths under Data, write-probe cleanup, no browser initialization and write failure without fallback. Serialization allowlists protect credential/profile metadata shapes.
+- WPF smoke passed: Discovery renders in light/dark, scans fake evidence, opens and saves the prefilled Add dialog, marks results managed, cancels scans, and drains cancellation before closing the main window. No binding errors. Final Discovery screenshot reviewed.
+- Explicit live native smoke: Windows enumeration found one active IPv4 interface and eleven valid ARP entries; at most one cached on-subnet neighbor was scanned successfully. This caught and fixed IPv6-only adapter enumeration failures. It is not a full-LAN acceptance test.
+- NuGet vulnerability query: no known vulnerable packages reported by configured sources. No new third-party library; Infrastructure now directly references the existing Microsoft.Extensions.Logging.Abstractions package (MIT).
+- Portable executable rebuilt; existing Data directory preserved. Missing-secret recovery, SSH trust storage and WebView2 runtime detection remain Milestone D implementation gates; they are documented, not advertised as implemented.
+- Remaining manual checks: full subnet discovery on the target LAN, cancellation during native ARP delays, overlapping/VPN adapters, DPI/keyboard/accessibility. OUI lookup is a provider boundary without a bundled database. Monitor/WoL transport remain Milestone C.

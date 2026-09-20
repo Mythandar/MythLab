@@ -1,27 +1,28 @@
 # Roadmap
 
-This session targets the initial task and Milestone A. Subsequent milestones are intentionally separate working increments, each requiring a clean build, offline tests, documentation update and local commit if Git is in use.
+Milestones A and B are implemented. Milestone C is next. Subsequent milestones are intentionally separate working increments, each requiring a clean build, offline tests, documentation update and local commit if Git is in use.
 
 ## A — Foundation (complete)
 - [x] Inspect environment and verify .NET 10
 - [x] Record architecture, candidate terminal approach and dependency/license choices
 - [x] Three production projects and two test projects
 - [x] WPF MVVM shell, DI and rolling structured logs
-- [x] Stable naming configuration and per-user data/settings
+- [x] Stable naming configuration and portable data/settings
 - [x] Device/profile/credential-reference models, SQLite migrations
 - [x] Managed-device Add/Edit/Delete, duplicate detection, metadata and WoL configuration
 - [x] Build, automated persistence/domain tests and desktop smoke verification
 
-## B — Discovery
-- [ ] Interface/mask enumeration and interface selection
-- [ ] Bounded cancellable IPv4 scan; handle large subnets explicitly
-- [ ] Neighbor-cache merge, local ARP, reverse DNS; do not require ping
-- [ ] Results with evidence/freshness and managed matching
-- [ ] Add selected result with prefilled editor
-- [ ] Offline tests using fake probes; optional OUI provider later
+## B — Discovery (complete)
+- [x] Interface/mask enumeration and interface selection
+- [x] Bounded cancellable IPv4 scan; handle large subnets explicitly
+- [x] Neighbor-cache merge, local ARP, reverse DNS; do not require ping
+- [x] Results with evidence/freshness and managed matching
+- [x] Add selected result with prefilled editor
+- [x] Offline tests using fake probes; optional OUI provider later
 
 ## C — WoL/status
-- [ ] MAC, packet, subnet and broadcast tests
+- [x] MAC normalization, subnet and broadcast calculations/tests
+- [ ] Magic packet generation and tests
 - [ ] UDP broadcast transport, selected NIC and conservative retries
 - [ ] Configurable asynchronous ICMP/TCP monitoring
 - [ ] Wake / Test Wake, state feedback and observed verification
@@ -49,11 +50,14 @@ This session targets the initial task and Milestone A. Subsequent milestones are
 ConPTY, tabs, tray mode, scheduled wake, SFTP, jump hosts, shutdown, integrations, import/export, relay and topology. Groups/notes/tags are basic device metadata now, not a separate management subsystem. Export will use explicit safe DTOs and never read secret storage.
 
 ## Verification record
-2026-09-19: Milestone A complete. Final Release build: zero warnings/errors. 35 offline tests passed. WPF smoke harness passed with no binding errors; rendered light/dark inventory and editor reviewed. NuGet reported no known vulnerable packages. See VERIFICATION.md for reproducible commands and manual desktop checks still needed. Next: Milestone B, including subnet/broadcast unit tests before discovery transport.
+2026-09-19: Milestone A complete. Final Release build: zero warnings/errors. 35 offline tests passed. WPF smoke harness passed with no binding errors; rendered light/dark inventory and editor reviewed. NuGet reported no known vulnerable packages. See VERIFICATION.md for reproducible commands and manual desktop checks still needed. Milestone B subsequently completed; see the latest verification below.
 
 ## Portable packaging follow-up
 - [x] Store normal settings, SQLite inventory and logs in Data beside the executable.
 - [x] Preserve existing AppData inventory/settings through one-time SQLite backup migration.
 - [x] Self-contained Windows x64 single-executable publish profile; embedded Release symbols.
 - [x] Five portable-path/migration tests; 40 total tests pass.
-- [ ] Revisit secure credential migration and WebView2 runtime/cache portability in Milestone D.
+- [x] Document/enforce portable paths, startup write access, no-secret serialization, Windows-only secrets and lazy Evergreen decision.
+- [ ] Implement missing-credential recovery and terminal-only runtime detection in Milestone D (see DATA-SECURITY.md).
+
+Milestone B verification: 72 offline tests pass (47 Core, 25 Infrastructure), WPF scan/add/cancel smoke passes, and an explicit one-host live smoke verified Windows adapter/ARP interop. Release packaging remains one self-contained executable. No OUI database, status monitor or wake transport yet.

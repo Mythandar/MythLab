@@ -10,6 +10,7 @@ public partial class DeviceEditorViewModel : ObservableObject
     private readonly IDeviceRepository repository;
     private readonly ILogger logger;
     private readonly Device original;
+    private readonly bool isNew;
     [ObservableProperty] private string displayName;
     [ObservableProperty] private string hostname;
     [ObservableProperty] private string ipAddress;
@@ -31,11 +32,12 @@ public partial class DeviceEditorViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     public Array DeviceTypes { get; } = Enum.GetValues<DeviceType>();
     public Array StatusChecks { get; } = Enum.GetValues<StatusCheckKind>();
-    public string Title => original.DisplayName.Length == 0 ? "Add device" : "Edit device";
+    public string Title => (isNew || original.DisplayName.Length == 0) ? "Add device" : "Edit device";
     public event EventHandler? Saved;
 
-    public DeviceEditorViewModel(IDeviceRepository repository, ILogger logger, Device? device = null)
+    public DeviceEditorViewModel(IDeviceRepository repository, ILogger logger, Device? device = null, bool isNew = false)
     {
+        this.isNew = isNew;
         this.repository = repository;
         this.logger = logger;
         original = device ?? new Device();

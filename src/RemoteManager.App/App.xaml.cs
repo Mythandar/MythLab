@@ -22,6 +22,7 @@ public partial class App : Application
         {
             var paths = new AppPaths(AppIdentity.DataId);
             var imported = await PortableDataSetup.PrepareAsync(paths, lifetime.Token);
+            await paths.VerifyWritableAsync(lifetime.Token);
             var recent = new RecentLogSink();
             Log.Logger = new LoggerConfiguration().MinimumLevel.Information()
                 .WriteTo.Sink(recent)
@@ -36,6 +37,9 @@ public partial class App : Application
             collection.AddSingleton<IDeviceRepository>(_ => new SqliteDeviceRepository(paths.Database));
             collection.AddSingleton(_ => new SettingsStore(paths.Settings));
             collection.AddSingleton<Views.DeviceDialogs>();
+            collection.AddSingleton<Core.Discovery.ILanProbe, Infrastructure.Discovery.WindowsLanProbe>();
+            collection.AddSingleton<Core.Discovery.INetworkDiscoveryService, Infrastructure.Discovery.NetworkDiscoveryService>();
+            collection.AddSingleton<DiscoveryViewModel>();
             collection.AddSingleton<ShellViewModel>();
             collection.AddSingleton<MainWindow>();
             services = collection.BuildServiceProvider();

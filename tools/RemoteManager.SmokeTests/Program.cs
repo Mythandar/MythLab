@@ -12,6 +12,8 @@ using RemoteManager.App.Diagnostics;
 using RemoteManager.App.ViewModels;
 using RemoteManager.App.Views;
 using RemoteManager.Core.Devices;
+using RemoteManager.Core.Discovery;
+using RemoteManager.Infrastructure.Discovery;
 using RemoteManager.Core.Settings;
 using RemoteManager.Infrastructure.Storage;
 
@@ -20,7 +22,7 @@ namespace RemoteManager.SmokeTests;
 internal static class Program
 {
     [STAThread]
-    private static int Main()
+    private static int Main(string[] args)
     {
         var result = 1;
         var app = new RemoteManager.App.App();
@@ -33,12 +35,17 @@ internal static class Program
             var directory = Path.Combine(Path.GetTempPath(), "RemoteManager.Smoke", Guid.NewGuid().ToString("N"));
             try
             {
+                if (args.Contains("--network-smoke")) { result = await NetworkSmoke.RunAsync(); return; }
                 using var repository = new SqliteDeviceRepository(Path.Combine(directory, "inventory.db"));
                 using var settings = new SettingsStore(Path.Combine(directory, "settings.json"));
                 using var loggerFactory = LoggerFactory.Create(_ => { });
                 var logger = loggerFactory.CreateLogger<ShellViewModel>();
+                var dialogs = new DeviceDialogs(repository, loggerFactory);
+                var fakeProbe = new SmokeProbe();
+                var discovery = new DiscoveryViewModel(new NetworkDiscoveryService(fakeProbe, loggerFactory.CreateLogger<NetworkDiscoveryService>()),
+                    repository, settings, dialogs, loggerFactory.CreateLogger<DiscoveryViewModel>());
                 var shell = new ShellViewModel(repository, settings, new RecentLogSink(), logger,
-                    new AppPaths(AppIdentity.DataId), new DeviceDialogs(repository, loggerFactory));
+                    new AppPaths(AppIdentity.DataId), dialogs, discovery);
                 await repository.InitializeAsync();
                 await shell.LoadAsync();
                 var main = new MainWindow(shell);
@@ -90,11 +97,54 @@ internal static class Program
                 shell.PollingInterval = "60";
                 await shell.SaveSettingsCommand.ExecuteAsync(null);
                 Require((await settings.LoadAsync()).PollingIntervalSeconds == 60, "Settings command must persist.");
-                await repository.DeleteAsync(shell.Devices[0].Id);
+                await discovery.RefreshInterfacesCommand.ExecuteAsync(null);
+                discovery.StartAddress = "10.20.30.50";
+                discovery.EndAddress = "10.20.30.51";
+                await discovery.ScanCommand.ExecuteAsync(null);
+                Require(discovery.Results.Count == 2, "Discovery UI must show non-ping devices.");
+                Require(discovery.Results.All(r => !r.Device.IsOnline), "ARP/cache must not be shown as online.");
+                discovery.SelectedResult = discovery.Results[0];
+                var draftAccepted = false;
+                var acceptNext = true;
+                EventManager.RegisterClassHandler(typeof(DeviceEditorWindow), FrameworkElement.LoadedEvent,
+                    new RoutedEventHandler(async (sender, _) =>
+                    {
+                        if (!acceptNext) return;
+                        acceptNext = false;
+                        var window = (DeviceEditorWindow)sender;
+                        var model = (DeviceEditorViewModel)window.DataContext;
+                        draftAccepted = model.Title == "Add device" && model.IpAddress == "10.20.30.50" &&
+                            model.Hostname == "discovered-nas.local" && !model.WakeEnabled && model.MacAddress == "00:11:22:33:44:50";
+                        if (draftAccepted) await model.SaveCommand.ExecuteAsync(null);
+                        else window.Close();
+                    }));
+                await discovery.AddSelectedCommand.ExecuteAsync(null);
+                await shell.LoadAsync();
+                Require(draftAccepted && shell.Devices.Count == 2, "Discovery add must use a prefilled editor and save into inventory.");
+                Require(discovery.Results[0].IsManaged, "Added discovery must be marked managed.");
+                var discoveryTabs = Find<TabControl>((DependencyObject)main.Content)!;
+                discoveryTabs.SelectedIndex = 1;
+                await RenderAsync(main, "discovery-light.png");
+                ThemeManager.Apply(AppTheme.Dark);
+                await RenderAsync(main, "discovery-dark.png");
+                fakeProbe.Block = true;
+                var cancelledScan = discovery.ScanCommand.ExecuteAsync(null);
+                await fakeProbe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                discovery.ScanCommand.Cancel();
+                await cancelledScan.WaitAsync(TimeSpan.FromSeconds(5));
+                Require(!discovery.IsScanning && discovery.Message.Contains("cancelled"), "Discovery cancellation must reset the UI.");
+                fakeProbe.Block = false;
+                foreach (var device in shell.Devices.ToArray()) await repository.DeleteAsync(device.Id);
                 await shell.LoadAsync();
                 Require(shell.IsEmpty, "Deleted device must disappear.");
+                fakeProbe.Block = true;
+                var shutdownScan = discovery.ScanCommand.ExecuteAsync(null);
+                main.Close();
+                await shutdownScan.WaitAsync(TimeSpan.FromSeconds(5));
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Require(!main.IsVisible && !discovery.IsScanning, "Closing must cancel and drain discovery before disposing services.");
                 Require(errors.Length == 0, "WPF binding errors: " + errors);
-                Console.WriteLine("PASS: WPF views rendered; editor validation/save/edit/duplicate, inventory search/delete, settings, light/dark and bindings verified.");
+                Console.WriteLine("PASS: WPF views rendered; editor validation/save/edit/duplicate, inventory search/delete, settings, discovery scan/add/cancel, light/dark and bindings verified.");
                 result = 0;
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); }

@@ -19,14 +19,7 @@
     </Style>
    </TabControl.Resources>
    <TabItem Header="My Devices"><views:DevicesView/></TabItem>
-   <TabItem Header="Discovery">
-    <StackPanel Margin="8">
-     <TextBlock Text="Discover your network" FontSize="28" FontWeight="SemiBold"/>
-     <TextBlock Text="Coming in Milestone B" Margin="0,12,0,20" Opacity=".65"/>
-     <TextBlock Text="Scan a selected local IPv4 network, review discovered devices, and add the ones you want to manage." MaxWidth="640" HorizontalAlignment="Left"/>
-     <TextBlock Text="Discovery will combine neighbor information, ARP and ping. Devices that do not answer ping may still appear." Margin="0,16,0,0" MaxWidth="640" HorizontalAlignment="Left"/>
-    </StackPanel>
-   </TabItem>
+   <TabItem Header="Discovery"><views:DiscoveryView DataContext="{Binding Discovery}"/></TabItem>
    <TabItem Header="Connections / Credentials">
     <StackPanel Margin="8">
      <TextBlock Text="Connections &amp; credentials" FontSize="28" FontWeight="SemiBold"/>

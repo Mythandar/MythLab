@@ -25,6 +25,7 @@ public partial class ShellViewModel : ObservableObject
     public Array Themes { get; } = Enum.GetValues<AppTheme>();
     public string DisplayName => AppIdentity.DisplayName;
     public string DataDirectory { get; }
+    public DiscoveryViewModel Discovery { get; }
     [ObservableProperty] private string search = "";
     [ObservableProperty] private string notice = "Add a computer, server or appliance to begin.";
     [ObservableProperty] private string diagnostics = "";
@@ -37,8 +38,10 @@ public partial class ShellViewModel : ObservableObject
     public bool IsEmpty => Devices.Count == 0;
 
     public ShellViewModel(IDeviceRepository repository, SettingsStore settingsStore, RecentLogSink recent,
-        ILogger<ShellViewModel> logger, AppPaths paths, DeviceDialogs dialogs)
+        ILogger<ShellViewModel> logger, AppPaths paths, DeviceDialogs dialogs, DiscoveryViewModel discovery)
     {
+        Discovery = discovery;
+        Discovery.DeviceAdded += OnDiscoveredDeviceAdded;
         this.repository = repository;
         this.settingsStore = settingsStore;
         this.recent = recent;
@@ -78,6 +81,7 @@ public partial class ShellViewModel : ObservableObject
         foreach (var device in devices) Devices.Add(device);
         OnPropertyChanged(nameof(InventorySummary));
         OnPropertyChanged(nameof(IsEmpty));
+        await Discovery.RefreshManagedAsync(cancellationToken);
     }
 
     [RelayCommand(CanExecute = nameof(CanMutate))]
@@ -121,8 +125,18 @@ public partial class ShellViewModel : ObservableObject
         ApplySettings(next);
         ThemeManager.Apply(Theme);
         logger.LogInformation("Settings saved");
-        Notice = "Settings saved. Network values will be used when discovery and monitoring are implemented.";
+        Notice = "Settings saved. Discovery uses the new values on its next scan; status polling arrives in Milestone C.";
     });
+
+    private async void OnDiscoveredDeviceAdded(object? sender, EventArgs e)
+    {
+        try { await LoadAsync(); }
+        catch (Exception ex)
+        {
+            logger.LogError("Inventory refresh after discovery failed; category {FailureCategory}", ex.GetType().Name);
+            Notice = "Device was saved. Reload My Devices to refresh the list.";
+        }
+    }
 
     [RelayCommand]
     private void RefreshDiagnostics() => Diagnostics = recent.Snapshot();
