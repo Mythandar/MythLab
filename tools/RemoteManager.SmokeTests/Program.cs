@@ -44,8 +44,10 @@ internal static class Program
                 var fakeProbe = new SmokeProbe();
                 var discovery = new DiscoveryViewModel(new NetworkDiscoveryService(fakeProbe, loggerFactory.CreateLogger<NetworkDiscoveryService>()),
                     repository, settings, dialogs, loggerFactory.CreateLogger<DiscoveryViewModel>());
+                var smokeStatus = new SmokeStatus();
+                var smokeWake = new SmokeWake();
                 var shell = new ShellViewModel(repository, settings, new RecentLogSink(), logger,
-                    new AppPaths(AppIdentity.DataId), dialogs, discovery);
+                    new AppPaths(AppIdentity.DataId), dialogs, discovery, new DeviceActivityViewModel(repository, smokeStatus, new RemoteManager.Infrastructure.WakeOnLan.WakeDeviceService(smokeWake, smokeStatus), loggerFactory.CreateLogger<DeviceActivityViewModel>()));
                 await repository.InitializeAsync();
                 await shell.LoadAsync();
                 var main = new MainWindow(shell);
@@ -81,7 +83,7 @@ internal static class Program
                     { DisplayName = "Duplicate", Hostname = "SMOKE-NAS.LOCAL" };
                 await duplicate.SaveCommand.ExecuteAsync(null);
                 Require(duplicate.Error.Contains("already uses"), "Editor must report duplicate.");
-                var editing = new DeviceEditorViewModel(repository, logger, shell.Devices[0]) { IpAddress = "10.20.30.41" };
+                var editing = new DeviceEditorViewModel(repository, logger, shell.Devices[0].Device) { IpAddress = "10.20.30.41" };
                 await editing.SaveCommand.ExecuteAsync(null);
                 await shell.LoadAsync();
                 Require(shell.Devices[0].IPv4Address == "10.20.30.41", "Address edit must persist.");
@@ -182,13 +184,48 @@ internal static class Program
                 await RenderAsync(main, "cards-short-dark.png");
                 Require(scroll.ScrollableHeight > 0, "Short windows must still allow scrolling to every card.");
                 fakeProbe.Block = true;
+                var targetCard = shell.Devices[0];
+                await repository.SaveAsync(targetCard.Device with { MacAddress = "02:AA:BB:CC:DD:EE", Wake = new() { Capability = WakeCapability.EnabledUnverified } });
+                await shell.LoadAsync();
+                // More than eight targets exercises the monitoring concurrency limit.
+                var extraIds = new List<Guid>();
+                for (var i = 0; i < 4; i++)
+                {
+                    var extra = new Device { DisplayName = "Monitor extra " + i, Hostname = "extra-" + i + ".local" };
+                    extraIds.Add(extra.Id);
+                    await repository.SaveAsync(extra);
+                }
+                await shell.LoadAsync();
+                await shell.Activity.CheckNowCommand.ExecuteAsync(null);
+                Require(shell.Devices.All(c => c.State == DeviceState.Online), "Status checks must update every card.");
+                Require(smokeStatus.MaximumActive == 8, "Ten devices must be checked with at most eight simultaneous probes.");
+                foreach (var id in extraIds) await repository.DeleteAsync(id);
+                await shell.LoadAsync();
+                shell.Activity.Settings = shell.Activity.Settings with { WakePollIntervalSeconds = 1 };
+                smokeStatus.Sequence = new Queue<DeviceState>([DeviceState.Offline, DeviceState.Online]);
+                await shell.Activity.TestWakeCommand.ExecuteAsync(targetCard);
+                Require(targetCard.State == DeviceState.Online && targetCard.Wake.Capability == WakeCapability.Verified && smokeWake.Calls == 1,
+                    "Offline-wake-online must verify and persist the wake configuration.");
+                Require((await repository.ListAsync()).Single(d => d.Id == targetCard.Id).Wake.Capability == WakeCapability.Verified, "Verification must survive reload.");
+                await RenderAsync(main, "wake-verified-dark.png");
+                smokeStatus.DefaultState = DeviceState.Offline;
+                var cancelWake = shell.Activity.WakeCommand.ExecuteAsync(targetCard);
+                await Task.Delay(100);
+                Require(targetCard.IsWaking, "Wake must remain cancellable while waiting.");
+                shell.Activity.CancelWakeCommand.Execute(targetCard);
+                await cancelWake.WaitAsync(TimeSpan.FromSeconds(3));
+                Require(!targetCard.IsWaking && targetCard.Detail.Contains("cancelled"), "Wake cancellation must restore usable controls.");
+
                 var shutdownScan = discovery.ScanCommand.ExecuteAsync(null);
+                var shutdownWake = shell.Activity.WakeCommand.ExecuteAsync(targetCard);
+                shell.Activity.Start();
                 main.Close();
+                await shutdownWake.WaitAsync(TimeSpan.FromSeconds(5));
                 await shutdownScan.WaitAsync(TimeSpan.FromSeconds(5));
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                 Require(!main.IsVisible && !discovery.IsScanning, "Closing must cancel and drain discovery before disposing services.");
                 Require(errors.Length == 0, "WPF binding errors: " + errors);
-                Console.WriteLine("PASS: WPF views rendered; editor validation/save/edit/duplicate, inventory search/delete, settings, discovery scan/add/cancel, light/dark and bindings verified.");
+                Console.WriteLine("PASS: WPF views rendered; editor validation/save/edit/duplicate, inventory search/delete, settings, discovery scan/add/cancel, bounded monitoring, wake verification/cancellation/shutdown, light/dark and bindings verified.");
                 result = 0;
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); }
@@ -248,5 +285,34 @@ internal static class Program
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         encoder.Save(stream);
+    }
+}
+
+
+internal sealed class SmokeStatus : RemoteManager.Core.Monitoring.IDeviceStatusService
+{
+    public Queue<DeviceState> Sequence { get; set; } = [];
+    public DeviceState DefaultState { get; set; } = DeviceState.Online;
+    private int active;
+    public int MaximumActive { get; private set; }
+    public async Task<RemoteManager.Core.Monitoring.StatusObservation> CheckAsync(Device device, int timeoutMilliseconds, CancellationToken cancellationToken = default)
+    {
+        active++;
+        MaximumActive = Math.Max(MaximumActive, active);
+        try
+        {
+            await Task.Delay(20, cancellationToken);
+            return new(Sequence.Count > 0 ? Sequence.Dequeue() : DefaultState, DateTimeOffset.UtcNow, "Smoke status");
+        }
+        finally { active--; }
+    }
+}
+internal sealed class SmokeWake : RemoteManager.Core.WakeOnLan.IWakeOnLanService
+{
+    public int Calls { get; private set; }
+    public Task<RemoteManager.Core.WakeOnLan.WakeSendReport> SendAsync(Device device, IProgress<RemoteManager.Core.WakeOnLan.WakeProgress> progress, CancellationToken cancellationToken = default)
+    {
+        Calls++;
+        return Task.FromResult(new RemoteManager.Core.WakeOnLan.WakeSendReport(new(new("fake", 1, "Fake", "10.0.0.1", "255.255.255.0", ""), "10.0.0.255", 9), 3));
     }
 }

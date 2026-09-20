@@ -5,13 +5,13 @@ using RemoteManager.Core.Devices;
 
 namespace RemoteManager.App.Views;
 
-public sealed class DeviceDialogs(IDeviceRepository repository, ILoggerFactory loggerFactory)
+public sealed class DeviceDialogs(IDeviceRepository repository, ILoggerFactory loggerFactory, Core.Discovery.ILanProbe? networks = null)
 {
     public bool AddDiscovered(Core.Discovery.DiscoveredDevice discovery) => Edit(discovery.ToDevice(), isNew: true);
 
     public bool Edit(Device? device, bool isNew = false)
     {
-        var model = new DeviceEditorViewModel(repository, loggerFactory.CreateLogger<DeviceEditorViewModel>(), device, isNew);
+        var model = new DeviceEditorViewModel(repository, loggerFactory.CreateLogger<DeviceEditorViewModel>(), device, isNew, networks);
         var dialog = new DeviceEditorWindow(model) { Owner = Application.Current.MainWindow };
         return dialog.ShowDialog() == true;
     }

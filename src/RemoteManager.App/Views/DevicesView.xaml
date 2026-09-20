@@ -7,13 +7,14 @@
   <DockPanel>
    <StackPanel><TextBlock Text="My Devices" FontSize="28" FontWeight="SemiBold"/><TextBlock Text="{Binding InventorySummary}" Margin="0,6,0,0" Opacity=".65"/></StackPanel>
    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+    <Button Content="_Check now" Command="{Binding Activity.CheckNowCommand}"/>
     <Button Content="_Reload" Command="{Binding RefreshCommand}"/>
     <Button Content="_Add device" Command="{Binding AddCommand}"/>
    </StackPanel>
   </DockPanel>
   <TextBox Grid.Row="1" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Margin="0,20,8,12"
    AutomationProperties.Name="Search devices" ToolTip="Search name, hostname, IP, MAC, group or tags"/>
-  <TextBlock Grid.Row="2" Text="Status monitoring and connection actions arrive in the next milestones." Opacity=".65" Margin="0,0,0,16"/>
+  <TextBlock Grid.Row="2" Text="Status uses the configured ICMP or TCP check. Wake waits for that check to succeed." Opacity=".65" Margin="0,0,0,16"/>
   <Grid Grid.Row="3">
    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsEmpty, Converter={StaticResource BoolVisibility}}">
     <TextBlock Text="Your devices, in one place" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center"/>
@@ -49,13 +50,18 @@
         <TextBlock Grid.Row="3" Text="{Binding Notes}" MaxHeight="38" TextTrimming="CharacterEllipsis" Margin="0,6,0,10" Opacity=".65" ToolTip="{Binding Notes}"/>
         <StackPanel Grid.Row="4">
          <DockPanel Margin="0,0,0,12">
-          <TextBlock Text="●  Unknown" ToolTip="No live status check has been performed."/>
+          <TextBlock Text="{Binding State, StringFormat='●  {0}'}" FontWeight="SemiBold" ToolTip="{Binding Detail}"/>
           <TextBlock Text="{Binding Wake.Capability, StringFormat='WoL: {0}'}" FontSize="12" Opacity=".65" HorizontalAlignment="Right"/>
          </DockPanel>
-         <StackPanel Orientation="Horizontal">
+         <TextBlock Text="{Binding Detail}" FontSize="12" MaxHeight="34" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding Detail}" Margin="0,0,0,6" AutomationProperties.LiveSetting="Polite"/>
+         <TextBlock Text="{Binding LastSeen}" FontSize="12" Opacity=".65" Margin="0,0,0,8"/>
+         <WrapPanel>
+          <Button Content="_Wake" Command="{Binding DataContext.Activity.WakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding CanWake}" Visibility="{Binding WakeEnabled, Converter={StaticResource BoolVisibility}}"/>
+          <Button Content="Test Wake" Command="{Binding DataContext.Activity.TestWakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding CanWake}" Visibility="{Binding WakeEnabled, Converter={StaticResource BoolVisibility}}" ToolTip="Checks availability, sends wake packets and watches for an Offline to Online transition."/>
+          <Button Content="Cancel wake" Command="{Binding DataContext.Activity.CancelWakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Visibility="{Binding IsWaking, Converter={StaticResource BoolVisibility}}"/>
           <Button Content="_Edit" Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
           <Button Content="_Delete" Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-         </StackPanel>
+         </WrapPanel>
         </StackPanel>
        </Grid>
       </Border>

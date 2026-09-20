@@ -40,6 +40,11 @@ public partial class App : Application
             collection.AddSingleton<Core.Discovery.ILanProbe, Infrastructure.Discovery.WindowsLanProbe>();
             collection.AddSingleton<Core.Discovery.INetworkDiscoveryService, Infrastructure.Discovery.NetworkDiscoveryService>();
             collection.AddSingleton<DiscoveryViewModel>();
+            collection.AddSingleton<Core.Monitoring.IDeviceStatusService, Infrastructure.Monitoring.WindowsDeviceStatusService>();
+            collection.AddSingleton<Core.WakeOnLan.IWakePacketTransport, Infrastructure.WakeOnLan.UdpWakePacketTransport>();
+            collection.AddSingleton<Core.WakeOnLan.IWakeOnLanService, Infrastructure.WakeOnLan.WakeOnLanService>();
+            collection.AddSingleton<Infrastructure.WakeOnLan.WakeDeviceService>();
+            collection.AddSingleton<DeviceActivityViewModel>();
             collection.AddSingleton<ShellViewModel>();
             collection.AddSingleton<MainWindow>();
             services = collection.BuildServiceProvider();
@@ -54,6 +59,7 @@ public partial class App : Application
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             Log.Information("Application started; inventory schema {SchemaVersion}", 1);
             MainWindow.Show();
+            model.Activity.Start();
         }
         catch (Exception ex)
         {

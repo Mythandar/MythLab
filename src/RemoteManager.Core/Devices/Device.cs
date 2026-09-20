@@ -14,6 +14,7 @@ public sealed record WakeConfiguration
     public int PacketCount { get; init; } = 3;
     public int DelayMilliseconds { get; init; } = 250;
     public int RetryCount { get; init; } = 1;
+    public int RetryDelayMilliseconds { get; init; } = 1000;
 }
 
 public sealed record Device
@@ -29,6 +30,7 @@ public sealed record Device
     public string[] Tags { get; init; } = [];
     public WakeConfiguration Wake { get; init; } = new();
     public DeviceState LastKnownState { get; init; }
+    public DateTimeOffset? LastChecked { get; init; }
     public DateTimeOffset? LastSeen { get; init; }
     public StatusCheckKind StatusCheck { get; init; }
     public int StatusPort { get; init; } = 22;

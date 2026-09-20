@@ -33,8 +33,8 @@ public static class DeviceRules
         if (device.Wake.Port is < 1 or > 65535 || device.StatusPort is < 1 or > 65535)
             throw new DeviceValidationException("Ports must be between 1 and 65535.");
         if (device.Wake.PacketCount is < 1 or > 10 || device.Wake.RetryCount is < 0 or > 5 ||
-            device.Wake.DelayMilliseconds is < 50 or > 10000)
-            throw new DeviceValidationException("Wake: 1–10 packets, 0–5 retries, and 50–10000 ms delay.");
+            device.Wake.DelayMilliseconds is < 50 or > 10000 || device.Wake.RetryDelayMilliseconds is < 50 or > 30000)
+            throw new DeviceValidationException("Wake: 1–10 packets, 0–5 retries, 50–10000 ms packet delay, and 50–30000 ms retry delay.");
         if (device.Notes.Length > 10000 || device.Group.Length > 100)
             throw new DeviceValidationException("Notes may contain 10000 characters; group may contain 100.");
         var tags = device.Tags.Select(t => t.Trim()).Where(t => t.Length > 0)

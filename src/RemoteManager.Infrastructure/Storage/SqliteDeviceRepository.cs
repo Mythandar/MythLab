@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using RemoteManager.Core.Devices;
+using RemoteManager.Core.Monitoring;
 
 namespace RemoteManager.Infrastructure.Storage;
 
@@ -73,7 +74,25 @@ public sealed class SqliteDeviceRepository(string databasePath) : IDeviceReposit
         {
             // BeginTransaction uses an immediate SQLite transaction; duplicate check and write are atomic.
             using var transaction = connection.BeginTransaction();
-            foreach (var existing in ReadDevices(connection, transaction))
+            var records = ReadDevices(connection, transaction);
+            var current = records.FirstOrDefault(d => d.Id == normalized.Id);
+            if (current is not null)
+            {
+                var same = DeviceTargets.SameStatus(current, normalized);
+                normalized = normalized with
+                {
+                    LastKnownState = same ? current.LastKnownState : DeviceState.Unknown,
+                    LastChecked = same ? current.LastChecked : null,
+                    LastSeen = same ? current.LastSeen : null,
+                    Wake = normalized.Wake with
+                    {
+                        Capability = normalized.Wake.Capability == WakeCapability.Disabled ? WakeCapability.Disabled :
+                            current.Wake.Capability == WakeCapability.Verified && DeviceTargets.SameWake(current, normalized)
+                                ? WakeCapability.Verified : WakeCapability.EnabledUnverified
+                    }
+                };
+            }
+            foreach (var existing in records)
             {
                 var reason = DeviceRules.MatchReason(normalized, existing);
                 if (reason is not null)
@@ -96,6 +115,37 @@ public sealed class SqliteDeviceRepository(string databasePath) : IDeviceReposit
             cancellationToken.ThrowIfCancellationRequested();
             transaction.Commit();
             return true;
+        }, cancellationToken);
+    }
+
+    public Task<Device?> ApplyObservationAsync(Device expected, StatusObservation observation, bool verifyWake = false,
+        CancellationToken cancellationToken = default)
+    {
+        if (observation.State is not (DeviceState.Online or DeviceState.Offline or DeviceState.Unknown))
+            throw new ArgumentException("Only observed availability can be persisted.");
+        return RunAsync<Device?>(connection =>
+        {
+            using var transaction = connection.BeginTransaction();
+            var current = ReadDevices(connection, transaction).FirstOrDefault(d => d.Id == expected.Id);
+            if (current is null || !DeviceTargets.SameStatus(current, expected) ||
+                current.LastChecked > observation.CheckedAt) return null;
+            var verified = verifyWake && observation.State == DeviceState.Online &&
+                current.Wake.Capability != WakeCapability.Disabled && DeviceTargets.SameWake(current, expected);
+            var updated = current with
+            {
+                LastKnownState = observation.State, LastChecked = observation.CheckedAt,
+                LastSeen = observation.State == DeviceState.Online ? observation.CheckedAt : current.LastSeen,
+                Wake = verified ? current.Wake with { Capability = WakeCapability.Verified } : current.Wake
+            };
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = "UPDATE devices SET document=$document WHERE id=$id";
+            command.Parameters.AddWithValue("$id", current.Id.ToString());
+            command.Parameters.AddWithValue("$document", JsonSerializer.Serialize(updated));
+            command.ExecuteNonQuery();
+            cancellationToken.ThrowIfCancellationRequested();
+            transaction.Commit();
+            return updated;
         }, cancellationToken);
     }
 

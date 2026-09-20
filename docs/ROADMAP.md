@@ -1,6 +1,6 @@
 # Roadmap
 
-Milestones A and B are implemented. Milestone C is next. Subsequent milestones are intentionally separate working increments, each requiring a clean build, offline tests, documentation update and local commit if Git is in use.
+Milestones A–C are implemented. Milestone D (credentials/integrated SSH) is next. Subsequent milestones are intentionally separate working increments, each requiring a clean build, offline tests, documentation update and local commit if Git is in use.
 
 ## A — Foundation (complete)
 - [x] Inspect environment and verify .NET 10
@@ -20,12 +20,12 @@ Milestones A and B are implemented. Milestone C is next. Subsequent milestones a
 - [x] Add selected result with prefilled editor
 - [x] Offline tests using fake probes; optional OUI provider later
 
-## C — WoL/status
+## C — WoL/status (complete)
 - [x] MAC normalization, subnet and broadcast calculations/tests
-- [ ] Magic packet generation and tests
-- [ ] UDP broadcast transport, selected NIC and conservative retries
-- [ ] Configurable asynchronous ICMP/TCP monitoring
-- [ ] Wake / Test Wake, state feedback and observed verification
+- [x] Magic packet generation and tests
+- [x] UDP broadcast transport, selected NIC and conservative retries
+- [x] Configurable asynchronous ICMP/TCP monitoring
+- [x] Wake / Test Wake, state feedback and observed verification
 
 ## D — Credentials/SSH
 - [ ] Windows Credential Manager, reusable metadata CRUD and secret replacement
@@ -60,6 +60,8 @@ ConPTY, tabs, tray mode, scheduled wake, SFTP, jump hosts, shutdown, integration
 - [x] Document/enforce portable paths, startup write access, no-secret serialization, Windows-only secrets and lazy Evergreen decision.
 - [ ] Implement missing-credential recovery and terminal-only runtime detection in Milestone D (see DATA-SECURITY.md).
 
-Milestone B verification: 72 offline tests pass (47 Core, 25 Infrastructure), WPF scan/add/cancel smoke passes, and an explicit one-host live smoke verified Windows adapter/ARP interop. Release packaging remains one self-contained executable. No OUI database, status monitor or wake transport yet.
+Milestone B verification: 72 offline tests pass (47 Core, 25 Infrastructure), WPF scan/add/cancel smoke passes, and an explicit one-host live smoke verified Windows adapter/ARP interop. Release packaging remains one self-contained executable. At that milestone, no OUI database, status monitor or wake transport was included; C adds monitoring and wake.
 
 UI follow-up: appearance selection now previews immediately (Save persists it), and device cards reflow by viewport width with scrolling only for overflow. Verified using real appearance control bindings and narrow/wide/short-window smoke checks.
+
+Milestone C verification: clean Release build; 93 automated tests and WPF monitoring/wake/cancellation/layout smoke passed. Portable single-executable publish succeeded. No real wake packets sent during tests. Hardware acceptance remains manual; see WAKE-ON-LAN.md and VERIFICATION.md.

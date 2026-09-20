@@ -30,11 +30,13 @@
     <Expander Header="Wake-on-LAN configuration" IsExpanded="True" Margin="0,8,0,12">
      <StackPanel Margin="0,12,0,0">
       <CheckBox Content="Enable Wake-on-LAN (unverified)" IsChecked="{Binding WakeEnabled}" Margin="0,0,0,10"/>
-      <TextBlock Text="Enabling this records your configuration. Discovery cannot prove wake support. Sending and testing wake packets arrives in Milestone C." Opacity=".65" Margin="0,0,0,12"/>
+      <TextBlock Text="Discovery cannot prove wake support. Test Wake verifies an observed Offline to Online transition after sending. Configure BIOS and NIC wake support on the target." Opacity=".65" Margin="0,0,0,12"/>
       <TextBlock Text="Broadcast address (blank = automatic)"/>
       <TextBox Text="{Binding BroadcastAddress, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Broadcast address"/>
-      <TextBlock Text="Preferred interface ID (optional; selection arrives with discovery)"/>
-      <TextBox Text="{Binding InterfaceId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Preferred interface"/>
+      <TextBlock Text="Preferred network interface"/>
+      <ComboBox ItemsSource="{Binding Interfaces}" DisplayMemberPath="Label" SelectedValuePath="Id" SelectedValue="{Binding InterfaceId}" AutomationProperties.Name="Preferred interface"/>
+      <TextBlock Text="{Binding InterfaceNotice}" Opacity=".65"/>
+      <TextBlock Text="Use a local subnet broadcast or 255.255.255.255. Multiple matching adapters require an explicit selection." Opacity=".65" Margin="0,0,0,8"/>
       <Grid>
        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
        <StackPanel Margin="0,0,8,0"><TextBlock Text="UDP port"/><TextBox Text="{Binding WakePort, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Wake port"/></StackPanel>
@@ -42,11 +44,13 @@
        <StackPanel Grid.Column="2" Margin="0,0,8,0"><TextBlock Text="Retries"/><TextBox Text="{Binding RetryCount, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Retry count"/></StackPanel>
        <StackPanel Grid.Column="3"><TextBlock Text="Delay (ms)"/><TextBox Text="{Binding DelayMilliseconds, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Wake delay"/></StackPanel>
       </Grid>
+      <TextBlock Text="Retry delay (milliseconds, 50–30000)"/>
+      <TextBox Text="{Binding RetryDelayMilliseconds, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Wake retry delay"/>
      </StackPanel>
     </Expander>
     <Expander Header="Status check configuration">
      <StackPanel Margin="0,12,0,0">
-      <TextBlock Text="Monitoring arrives in Milestone C. Choose the future host availability check." Opacity=".65" Margin="0,0,0,10"/>
+      <TextBlock Text="Choose ICMP or an expected running TCP service. Hostnames are resolved again each check." Opacity=".65" Margin="0,0,0,10"/>
       <ComboBox ItemsSource="{Binding StatusChecks}" SelectedItem="{Binding StatusCheck}" AutomationProperties.Name="Status check"/>
       <TextBlock Text="TCP port (used only for TCP checks)"/>
       <TextBox Text="{Binding StatusPort, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Status TCP port"/>

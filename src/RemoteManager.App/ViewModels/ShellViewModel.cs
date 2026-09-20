@@ -20,7 +20,8 @@ public partial class ShellViewModel : ObservableObject
     private readonly ILogger<ShellViewModel> logger;
     private readonly DeviceDialogs dialogs;
     private AppSettings settings = new();
-    public ObservableCollection<Device> Devices { get; } = [];
+    public DeviceActivityViewModel Activity { get; }
+    public ObservableCollection<DeviceCardViewModel> Devices => Activity.Cards;
     public ICollectionView FilteredDevices { get; }
     public Array Themes { get; } = Enum.GetValues<AppTheme>();
     public string DisplayName => AppIdentity.DisplayName;
@@ -33,13 +34,16 @@ public partial class ShellViewModel : ObservableObject
     [ObservableProperty] private string pollingInterval = "30";
     [ObservableProperty] private string discoveryConcurrency = "32";
     [ObservableProperty] private string probeTimeout = "750";
+    [ObservableProperty] private string wakeTimeout = "120";
+    [ObservableProperty] private string wakePollInterval = "3";
     [ObservableProperty] private bool isBusy;
     public string InventorySummary => $"{Devices.Count} managed device{(Devices.Count == 1 ? "" : "s")}";
     public bool IsEmpty => Devices.Count == 0;
 
     public ShellViewModel(IDeviceRepository repository, SettingsStore settingsStore, RecentLogSink recent,
-        ILogger<ShellViewModel> logger, AppPaths paths, DeviceDialogs dialogs, DiscoveryViewModel discovery)
+        ILogger<ShellViewModel> logger, AppPaths paths, DeviceDialogs dialogs, DiscoveryViewModel discovery, DeviceActivityViewModel activity)
     {
+        Activity = activity;
         Discovery = discovery;
         Discovery.DeviceAdded += OnDiscoveredDeviceAdded;
         this.repository = repository;
@@ -49,7 +53,7 @@ public partial class ShellViewModel : ObservableObject
         this.dialogs = dialogs;
         DataDirectory = paths.Root;
         FilteredDevices = CollectionViewSource.GetDefaultView(Devices);
-        FilteredDevices.Filter = item => item is Device device &&
+        FilteredDevices.Filter = item => item is DeviceCardViewModel card && card.Device is { } device &&
             (string.IsNullOrWhiteSpace(Search) || new[] { device.DisplayName, device.Hostname, device.IPv4Address,
                 device.MacAddress, device.Group, string.Join(" ", device.Tags) }.Any(value =>
                 value.Contains(Search.Trim(), StringComparison.OrdinalIgnoreCase)));
@@ -69,6 +73,9 @@ public partial class ShellViewModel : ObservableObject
     public void ApplySettings(AppSettings value)
     {
         settings = value;
+        Activity.Settings = value;
+        WakeTimeout = value.WakeTimeoutSeconds.ToString();
+        WakePollInterval = value.WakePollIntervalSeconds.ToString();
         Theme = value.Theme;
         PollingInterval = value.PollingIntervalSeconds.ToString();
         DiscoveryConcurrency = value.DiscoveryConcurrency.ToString();
@@ -78,8 +85,7 @@ public partial class ShellViewModel : ObservableObject
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         var devices = await repository.ListAsync(cancellationToken);
-        Devices.Clear();
-        foreach (var device in devices) Devices.Add(device);
+        Activity.Synchronize(devices); FilteredDevices.Refresh();
         OnPropertyChanged(nameof(InventorySummary));
         OnPropertyChanged(nameof(IsEmpty));
         await Discovery.RefreshManagedAsync(cancellationToken);
@@ -99,15 +105,15 @@ public partial class ShellViewModel : ObservableObject
     });
 
     [RelayCommand(CanExecute = nameof(CanMutate))]
-    private async Task EditAsync(Device? device) => await WithBusyAsync(async () =>
+    private async Task EditAsync(DeviceCardViewModel? device) => await WithBusyAsync(async () =>
     {
-        if (device is not null && dialogs.Edit(device)) { await LoadAsync(); Notice = "Device updated."; }
+        if (device is not null && dialogs.Edit(device.Device)) { await LoadAsync(); Notice = "Device updated."; }
     });
 
     [RelayCommand(CanExecute = nameof(CanMutate))]
-    private async Task DeleteAsync(Device? device) => await WithBusyAsync(async () =>
+    private async Task DeleteAsync(DeviceCardViewModel? device) => await WithBusyAsync(async () =>
     {
-        if (device is null || !dialogs.ConfirmDelete(device)) return;
+        if (device is null || !dialogs.ConfirmDelete(device.Device)) return;
         await repository.DeleteAsync(device.Id);
         logger.LogInformation("Device deleted {DeviceId}", device.Id);
         await LoadAsync();
@@ -118,15 +124,15 @@ public partial class ShellViewModel : ObservableObject
     private async Task SaveSettingsAsync() => await WithBusyAsync(async () =>
     {
         if (!int.TryParse(PollingInterval, out var interval) ||
-            !int.TryParse(DiscoveryConcurrency, out var concurrency) || !int.TryParse(ProbeTimeout, out var timeout))
+            !int.TryParse(DiscoveryConcurrency, out var concurrency) || !int.TryParse(ProbeTimeout, out var timeout) || !int.TryParse(WakeTimeout, out var wakeTimeout) || !int.TryParse(WakePollInterval, out var wakePoll))
             throw new ArgumentException("Enter whole numbers for network settings.");
         var next = settings with { Theme = Theme, PollingIntervalSeconds = interval,
-            DiscoveryConcurrency = concurrency, ProbeTimeoutMilliseconds = timeout };
+            DiscoveryConcurrency = concurrency, ProbeTimeoutMilliseconds = timeout, WakeTimeoutSeconds = wakeTimeout, WakePollIntervalSeconds = wakePoll };
         await settingsStore.SaveAsync(next);
         ApplySettings(next);
         ThemeManager.Apply(Theme);
         logger.LogInformation("Settings saved");
-        Notice = "Settings saved. Discovery uses the new values on its next scan; status polling arrives in Milestone C.";
+        Notice = "Settings saved. New network values apply on the next scan, status cycle or wake operation.";
     });
 
     private async void OnDiscoveredDeviceAdded(object? sender, EventArgs e)

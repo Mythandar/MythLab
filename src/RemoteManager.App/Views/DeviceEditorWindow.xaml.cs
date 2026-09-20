@@ -14,7 +14,7 @@ public partial class DeviceEditorWindow : Window
         InitializeComponent();
         DataContext = model;
         model.Saved += OnSaved;
-        Loaded += (_, _) => NameInput.Focus();
+        Loaded += async (_, _) => { NameInput.Focus(); await model.LoadInterfacesAsync(); };
         Closing += OnClosing;
         Closed += (_, _) => model.Saved -= OnSaved;
     }

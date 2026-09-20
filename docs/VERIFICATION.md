@@ -48,3 +48,13 @@ The only diagnostic opt-in is WPF0001 in ThemeManager: WPF marks dynamic ThemeMo
 
 ## Appearance and card-layout fix
 WPF smoke now selects Light/Dark/System through the actual Settings ComboBox, verifies theme brush changes before Save and persistence after Save, and checks six cards at 920/1600-DIP window widths. Narrow mode uses one column; wide mode uses at least three with no vertical scroll when cards fit; reducing window height restores scrolling. Wide dark and narrow light renderings were visually reviewed. Existing discovery/shutdown smoke checks still pass.
+
+## Milestone C — Wake-on-LAN and monitoring
+2026-09-19:
+- Release solution build succeeded with zero warnings/errors.
+- 93 automated tests passed (57 Core, 36 Infrastructure). New coverage checks all magic-packet bytes, invalid MACs, real-mask routing, ambiguous/missing interfaces, configured burst sends, cancellation, timeout, already-online and unknown-baseline verification rules, and status/edit/delete races.
+- Wake transport is replaced by fakes in tests. The production TCP checker is tested only against a temporary loopback listener; no Internet, LAN scan or real wake packet is required.
+- WPF smoke passed with no binding errors: ten managed devices reached Online with exactly eight simultaneous probes at peak; Test Wake persisted verification; cancelling a wake restored controls; closing drained wake, monitoring and discovery. Existing theme and responsive-card checks still pass. Reviewed dark-mode verified-wake rendering.
+- Locked portable publish succeeded: artifacts/portable/RemoteManager.exe, 66,511,936 bytes (about 63.4 MiB), one executable. Existing portable Data remains untouched.
+- No new packages or license changes. App/Core/Infrastructure boundaries remain intact.
+- Physical waking and target-specific BIOS/NIC/firewall settings still need manual acceptance on a known supported computer. Automated tests deliberately cannot establish real hardware support. See WAKE-ON-LAN.md.

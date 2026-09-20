@@ -9,6 +9,7 @@ public partial class MainWindow : Window
 {
     private readonly ShellViewModel model;
     private bool waitingForScan;
+    private bool drained;
     public MainWindow(ShellViewModel model)
     {
         this.model = model;
@@ -21,14 +22,16 @@ public partial class MainWindow : Window
     {
         // Let a local write finish before disposing the repository.
         if (model.IsBusy || model.Discovery.IsBusy || waitingForScan) { e.Cancel = true; return; }
-        if (model.Discovery.ScanCommand.ExecutionTask is not { IsCompleted: false } scan) return;
+        if (drained) return;
+        var scan = model.Discovery.ScanCommand.ExecutionTask;
         e.Cancel = true;
         waitingForScan = true;
         model.Discovery.ScanCommand.Cancel();
-        try { await scan; }
+        try { await model.Activity.StopAsync(); if (scan is not null) await scan; }
         catch (OperationCanceledException) { }
         finally
         {
+            drained = true;
             waitingForScan = false;
             // Defer until the current Closing event has unwound, including synchronous cancellation.
             _ = Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(Close));
