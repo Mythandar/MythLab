@@ -87,6 +87,7 @@ internal static class Program
                 await shell.LoadAsync();
                 Require(connections.Credentials.Single().Availability.StartsWith("Missing credential"), "Copied credential must be visibly missing.");
                 Require(shell.Devices[0].SshProfiles.Count == 1, "SSH action must appear on its device.");
+                await DeviceSshSmoke.RunAsync(connections, repository, shell.Devices[0], secrets);
                 await RenderAsync(main, "inventory-light.png");
                 shell.Search = "unmatched";
                 Require(shell.FilteredDevices.IsEmpty, "Search must filter inventory.");
@@ -219,7 +220,7 @@ internal static class Program
                 smokeStatus.Sequence = new Queue<DeviceState>([DeviceState.Offline, DeviceState.Online]);
                 await shell.Activity.TestWakeCommand.ExecuteAsync(targetCard);
                 Require(targetCard.State == DeviceState.Online && targetCard.Wake.Capability == WakeCapability.Verified && smokeWake.Calls == 1,
-                    "Offline-wake-online must verify and persist the wake configuration.");
+                    $"Offline-wake-online must verify and persist the wake configuration: {targetCard.State}, {targetCard.Wake.Capability}, sends={smokeWake.Calls}, {targetCard.Detail}");
                 Require((await repository.ListAsync()).Single(d => d.Id == targetCard.Id).Wake.Capability == WakeCapability.Verified, "Verification must survive reload.");
                 await RenderAsync(main, "wake-verified-dark.png");
                 smokeStatus.DefaultState = DeviceState.Offline;
@@ -284,7 +285,7 @@ internal static class Program
         return null;
     }
 
-    private static async Task RenderAsync(Window window, string filename)
+    internal static async Task RenderAsync(Window window, string filename)
     {
         if (!window.IsVisible)
         {
@@ -308,9 +309,10 @@ internal static class Program
         using (var drawing = background.RenderOpen())
         {
             drawing.DrawRectangle(filename.Contains("dark") ? new SolidColorBrush(Color.FromRgb(32,32,32)) : Brushes.White, null, new Rect(size));
-            drawing.DrawRectangle(new VisualBrush(element), null, new Rect(size));
+            // Render directly below to preserve the arranged content aspect ratio.
         }
         bitmap.Render(background);
+        bitmap.Render(element);
         var folder = Path.GetFullPath("artifacts/ui-smoke");
         Directory.CreateDirectory(folder);
         using var stream = File.Create(Path.Combine(folder, filename));
@@ -351,8 +353,10 @@ internal sealed class SmokeWake : MythLab.Core.WakeOnLan.IWakeOnLanService
 
 internal sealed class SmokeSecrets : MythLab.Core.Credentials.ICredentialStore
 {
-    public Task<MythLab.Core.Credentials.SecretStatus> InspectAsync(Guid id, CancellationToken token = default) => Task.FromResult(MythLab.Core.Credentials.SecretStatus.Missing);
-    public Task<string?> ReadAsync(Guid id, CancellationToken token = default) => throw new InvalidOperationException("UI metadata loading must not read secrets.");
-    public Task WriteAsync(Guid id, string value, CancellationToken token = default) => throw new NotSupportedException();
-    public Task DeleteAsync(Guid id, CancellationToken token = default) => throw new NotSupportedException();
+    public Dictionary<Guid, string> Values { get; } = [];
+    public bool AllowReads { get; set; }
+    public Task<MythLab.Core.Credentials.SecretStatus> InspectAsync(Guid id, CancellationToken token = default) => Task.FromResult(Values.ContainsKey(id) ? MythLab.Core.Credentials.SecretStatus.Available : MythLab.Core.Credentials.SecretStatus.Missing);
+    public Task<string?> ReadAsync(Guid id, CancellationToken token = default) => AllowReads ? Task.FromResult(Values.GetValueOrDefault(id)) : throw new InvalidOperationException("UI loading/authentication must not read fixture secrets.");
+    public Task WriteAsync(Guid id, string value, CancellationToken token = default) { Values[id] = value; return Task.CompletedTask; }
+    public Task DeleteAsync(Guid id, CancellationToken token = default) { Values.Remove(id); return Task.CompletedTask; }
 }

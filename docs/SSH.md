@@ -34,3 +34,10 @@ Credential saves compensate across SQLite and Windows Credential Manager. If eit
 If rollback fails, the editor explicitly says manual credential repair may be required. Before connecting, review the credential's authentication type, username and key path and replace/recreate the correct Windows secret. These are not true cross-store transactions: an application/process crash or concurrent edits from another instance can also require repair. Do not assume a failed save succeeded.
 
 Closing during metadata work waits for it to finish and then closes automatically. If WebView2 initialization fails, Reconnect is disabled: correct the runtime/cache-directory problem, close that terminal and open a new one. Ordinary SSH authentication/network failures can still use Reconnect.
+
+## SSH directly from My Devices
+Every device card has SSH and Edit SSH actions. SSH connects when there is one profile, or asks which profile to use when there are several. With no profile, a modal setup dialog stays over My Devices with the device/endpoint prefilled. Enter username/password and choose Save & connect. Port 22 and a 30-second timeout are defaults; Advanced SSH settings exposes port, timeout, labels and private-key authentication.
+
+Edit SSH opens the same settings without connecting. Blank password input preserves the saved secret. Shared credentials are explicitly identified because editing their username/authentication/secret affects every referencing profile. Connections / Credentials remains available for reassigning credentials and creating additional profiles.
+
+Setup uses the compensating credential-save service. Profile persistence follows credential persistence. If profile saving fails, the dialog reports that the credential was saved and permits retry; cancelling then leaves that reusable credential visible in Connections / Credentials. This is not an atomic credential-plus-profile transaction.

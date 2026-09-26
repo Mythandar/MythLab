@@ -71,3 +71,5 @@ Pre-D review complete: cache-aware discovery without skipping live checks, truth
 Milestone D: reusable Windows credentials, persisted SSH profiles, explicit known-host trust, password/key authentication and functional integrated terminal implemented. 109 automated tests pass; native loopback SSH and local renderer smoke pass. Manual terminal compatibility checks remain documented in SSH.md. Milestone E is next; no E/F features were implemented.
 
 Focused D review complete: testable compensating credential saves, explicit browser reopen recovery, and automatic close after metadata work. 128 automated tests and local WPF/terminal/SSH smoke pass. Milestone E remains next.
+
+Device-first SSH follow-up: every card offers SSH and Edit SSH. First connection opens prefilled username/password setup; settings remain synchronized with Connections / Credentials. Multiple profiles and shared credentials remain supported.

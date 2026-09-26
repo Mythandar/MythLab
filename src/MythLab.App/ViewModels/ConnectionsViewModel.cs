@@ -60,6 +60,34 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
         catch (Exception ex) when (ex is System.IO.IOException or System.Text.Json.JsonException or FormatException)
         { Message = "Known-host records could not be read. SSH remains blocked until Data/ssh/known-hosts.json is repaired."; }
     }
+    [RelayCommand] private Task DeviceSshAsync(DeviceCardViewModel? card) => DeviceSshAsync(card, false);
+    [RelayCommand] private Task EditDeviceSshAsync(DeviceCardViewModel? card) => DeviceSshAsync(card, true);
+    private async Task DeviceSshAsync(DeviceCardViewModel? card, bool edit)
+    {
+        if (card is null || IsBusy) return;
+        ConnectionProfile? launch = null;
+        await RunAsync(async () =>
+        {
+            var device = (await devices.ListAsync()).FirstOrDefault(d => d.Id == card.Id)
+                ?? throw new InvalidOperationException("This device was deleted. Reload My Devices.");
+            var profiles = await repository.ListProfilesAsync();
+            var matches = profiles.Where(p => p.DeviceId == device.Id && p.Kind == ConnectionKind.Ssh)
+                .OrderBy(p => p.DisplayName).ThenBy(p => p.Id).ToArray();
+            var profile = DeviceSshDialog.ChooseProfile(device, matches);
+            if (matches.Length > 0 && profile is null) return;
+            if (profile is null || edit)
+            {
+                var credential = (await repository.ListCredentialsAsync()).FirstOrDefault(c => c.Id == profile?.CredentialId);
+                var shared = credential is null ? 0 : profiles.Count(p => p.CredentialId == credential.Id);
+                try { profile = DeviceSshDialog.Edit(device, profile, credential, shared, repository, credentialSaver, !edit); }
+                finally { await LoadAsync(); } // also expose a successfully saved credential after a profile-save failure
+                if (profile is null) return;
+                Message = "SSH settings saved for " + device.DisplayName + ".";
+            }
+            if (!edit) launch = profile;
+        });
+        if (launch is not null) Connect(launch);
+    }
     [RelayCommand] private Task RefreshAsync() => RunAsync(() => LoadAsync());
     [RelayCommand] private Task AddCredentialAsync() => RunAsync(async () =>
     {

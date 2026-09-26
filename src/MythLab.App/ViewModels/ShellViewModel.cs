@@ -46,7 +46,11 @@ public partial class ShellViewModel : ObservableObject
     {
         Activity = activity;
         Connections = connections;
-        if (Connections is not null) Connections.ProfilesChanged += (_, _) => UpdateProfileCards();
+        if (Connections is not null)
+        {
+            Connections.ProfilesChanged += (_, _) => UpdateProfileCards();
+            Connections.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(Connections.Message)) Notice = Connections.Message; };
+        }
         Discovery = discovery;
         Discovery.DeviceAdded += OnDiscoveredDeviceAdded;
         this.repository = repository;

@@ -35,9 +35,9 @@ internal sealed class MetadataEditor : Window
         System.Windows.Automation.AutomationProperties.SetName(box, label);
         Fields.Children.Add(box); return box;
     }
-    public void OnSave(Func<Task> action)
+    public void OnSave(Func<Task> action, string buttonLabel = "Save")
     {
-        var save = new Button { Content = "Save", IsDefault = true, Margin = new(0, 16, 0, 0) };
+        var save = new Button { Content = buttonLabel, IsDefault = true, Margin = new(0, 16, 0, 0) };
         Fields.Children.Add(save);
         save.Click += async (_, _) =>
         {
