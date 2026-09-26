@@ -28,12 +28,12 @@ Milestones A–C are implemented. The pre-D review fixed cached-MAC probing, mul
 - [x] Wake / Test Wake, state feedback and observed verification
 
 ## D — Credentials/SSH
-- [ ] Windows Credential Manager, reusable metadata CRUD and secret replacement
-- [ ] Persist connection profiles and host-key records through dedicated repositories
-- [ ] SSH.NET transport, explicit trust/reject and changed-key protection
-- [ ] Renderer spike: locally bundled xterm.js/WebView2 security and usability gates
-- [ ] Functional interactive SSH terminal, password/key auth, resize, clipboard and reconnect
-- [ ] License asset copies and runtime installation guidance
+- [x] Windows Credential Manager, reusable metadata CRUD and secret replacement
+- [x] Persist connection profiles and host-key records through dedicated repositories
+- [x] SSH.NET transport, explicit trust/reject and changed-key protection
+- [x] Renderer spike: locally bundled xterm.js/WebView2 security and usability gates
+- [x] Functional interactive SSH terminal, password/key auth, resize, clipboard and reconnect
+- [x] License asset copies and runtime installation guidance
 
 ## E — External connections
 - [ ] RealVNC / Moonlight executable configuration and optional detection
@@ -58,7 +58,7 @@ ConPTY, tabs, tray mode, scheduled wake, SFTP, jump hosts, shutdown, integration
 - [x] Self-contained Windows x64 single-executable publish profile; embedded Release symbols.
 - [x] Five portable-path/migration tests; 40 total tests pass.
 - [x] Document/enforce portable paths, startup write access, no-secret serialization, Windows-only secrets and lazy Evergreen decision.
-- [ ] Implement missing-credential recovery and terminal-only runtime detection in Milestone D (see DATA-SECURITY.md).
+- [x] Implement missing-credential recovery and terminal-only runtime detection in Milestone D (see DATA-SECURITY.md).
 
 Milestone B verification: 72 offline tests pass (47 Core, 25 Infrastructure), WPF scan/add/cancel smoke passes, and an explicit one-host live smoke verified Windows adapter/ARP interop. Release packaging remains one self-contained executable. At that milestone, no OUI database, status monitor or wake transport was included; C adds monitoring and wake.
 
@@ -66,4 +66,6 @@ UI follow-up: appearance selection now previews immediately (Save persists it), 
 
 Milestone C verification: clean Release build; 93 automated tests and WPF monitoring/wake/cancellation/layout smoke passed. Portable single-executable publish succeeded. No real wake packets sent during tests. Hardware acceptance remains manual; see WAKE-ON-LAN.md and VERIFICATION.md.
 
-Pre-D review complete: cache-aware discovery without skipping live checks, truthful scan-read timestamps, multi-address status checks and offline Windows CI. Milestone D remains unstarted. See VERIFICATION.md.
+Pre-D review complete: cache-aware discovery without skipping live checks, truthful scan-read timestamps, multi-address status checks and offline Windows CI. Milestone D was subsequently implemented; see the entry below. See VERIFICATION.md.
+
+Milestone D: reusable Windows credentials, persisted SSH profiles, explicit known-host trust, password/key authentication and functional integrated terminal implemented. 109 automated tests pass; native loopback SSH and local renderer smoke pass. Manual terminal compatibility checks remain documented in SSH.md. Milestone E is next; no E/F features were implemented.

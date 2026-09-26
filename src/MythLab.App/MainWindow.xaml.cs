@@ -21,13 +21,13 @@ public partial class MainWindow : Window
     private async void OnClosing(object? sender, CancelEventArgs e)
     {
         // Let a local write finish before disposing the repository.
-        if (model.IsBusy || model.Discovery.IsBusy || waitingForScan) { e.Cancel = true; return; }
+        if (model.IsBusy || model.Discovery.IsBusy || model.Connections?.IsBusy == true || waitingForScan) { e.Cancel = true; return; }
         if (drained) return;
         var scan = model.Discovery.ScanCommand.ExecutionTask;
         e.Cancel = true;
         waitingForScan = true;
         model.Discovery.ScanCommand.Cancel();
-        try { await model.Activity.StopAsync(); if (scan is not null) await scan; }
+        try { if (model.Connections is not null) await model.Connections.StopAsync(); await model.Activity.StopAsync(); if (scan is not null) await scan; }
         catch (OperationCanceledException) { }
         finally
         {

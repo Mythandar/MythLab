@@ -27,6 +27,7 @@ public partial class ShellViewModel : ObservableObject
     public string DisplayName => AppIdentity.DisplayName;
     public string DataDirectory { get; }
     public DiscoveryViewModel Discovery { get; }
+    public ConnectionsViewModel? Connections { get; }
     [ObservableProperty] private string search = "";
     [ObservableProperty] private string notice = "Add a computer, server or appliance to begin.";
     [ObservableProperty] private string diagnostics = "";
@@ -41,9 +42,11 @@ public partial class ShellViewModel : ObservableObject
     public bool IsEmpty => Devices.Count == 0;
 
     public ShellViewModel(IDeviceRepository repository, SettingsStore settingsStore, RecentLogSink recent,
-        ILogger<ShellViewModel> logger, AppPaths paths, DeviceDialogs dialogs, DiscoveryViewModel discovery, DeviceActivityViewModel activity)
+        ILogger<ShellViewModel> logger, AppPaths paths, DeviceDialogs dialogs, DiscoveryViewModel discovery, DeviceActivityViewModel activity, ConnectionsViewModel? connections = null)
     {
         Activity = activity;
+        Connections = connections;
+        if (Connections is not null) Connections.ProfilesChanged += (_, _) => UpdateProfileCards();
         Discovery = discovery;
         Discovery.DeviceAdded += OnDiscoveredDeviceAdded;
         this.repository = repository;
@@ -86,9 +89,16 @@ public partial class ShellViewModel : ObservableObject
     {
         var devices = await repository.ListAsync(cancellationToken);
         Activity.Synchronize(devices); FilteredDevices.Refresh();
+        if (Connections is not null) await Connections.LoadAsync(cancellationToken);
+        UpdateProfileCards();
         OnPropertyChanged(nameof(InventorySummary));
         OnPropertyChanged(nameof(IsEmpty));
         await Discovery.RefreshManagedAsync(cancellationToken);
+    }
+
+    private void UpdateProfileCards()
+    {
+        foreach (var card in Devices) card.SetProfiles(Connections?.Profiles.Where(p => p.Profile.DeviceId == card.Id).Select(p => p.Profile).ToArray() ?? []);
     }
 
     [RelayCommand(CanExecute = nameof(CanMutate))]

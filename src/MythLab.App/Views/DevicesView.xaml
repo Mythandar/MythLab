@@ -55,6 +55,10 @@
          </DockPanel>
          <TextBlock Text="{Binding Detail}" FontSize="12" MaxHeight="34" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding Detail}" Margin="0,0,0,6" AutomationProperties.LiveSetting="Polite"/>
          <TextBlock Text="{Binding LastSeen}" FontSize="12" Opacity=".65" Margin="0,0,0,8"/>
+         <ItemsControl ItemsSource="{Binding SshProfiles}">
+          <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate><DataTemplate><Button Content="{Binding DisplayName}" Command="{Binding DataContext.Connections.ConnectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Margin="0,0,8,8"/></DataTemplate></ItemsControl.ItemTemplate>
+         </ItemsControl>
          <WrapPanel>
           <Button Content="_Wake" Command="{Binding DataContext.Activity.WakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding CanWake}" Visibility="{Binding WakeEnabled, Converter={StaticResource BoolVisibility}}"/>
           <Button Content="Test Wake" Command="{Binding DataContext.Activity.TestWakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding CanWake}" Visibility="{Binding WakeEnabled, Converter={StaticResource BoolVisibility}}" ToolTip="Checks availability, sends wake packets and watches for an Offline to Online transition."/>

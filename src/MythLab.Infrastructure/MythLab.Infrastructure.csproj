@@ -1,4 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
 <PropertyGroup><AssemblyName>$(AppAssemblyPrefix).Infrastructure</AssemblyName></PropertyGroup>
 <ItemGroup><ProjectReference Include="../MythLab.Core/MythLab.Core.csproj" /><PackageReference Include="Microsoft.Data.Sqlite" /><PackageReference Include="Microsoft.Extensions.Logging.Abstractions" /></ItemGroup>
-</Project>
+<ItemGroup><PackageReference Include="SSH.NET" /></ItemGroup></Project>

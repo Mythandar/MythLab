@@ -5,7 +5,7 @@ using MythLab.Core.Monitoring;
 
 namespace MythLab.Infrastructure.Storage;
 
-public sealed class SqliteDeviceRepository(string databasePath) : IDeviceRepository, IDisposable
+public sealed partial class SqliteDeviceRepository(string databasePath) : IDeviceRepository, MythLab.Core.Connections.IConnectionRepository, IDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     private bool initialized;

@@ -70,3 +70,27 @@ WPF smoke now selects Light/Dark/System through the actual Settings ComboBox, ve
 - Windows CI uses windows-2022, the .NET 10 SDK selected by global.json (10.0.400 feature band), locked restore, Release build, and only offline automated tests with read-only repository permissions. WPF smoke and LocalNetwork-tagged tests remain local.
 - Root project licensing remains undecided. Dependency licenses do not grant a MythLab project license.
 - Local locked restore passed. Release build passed with zero warnings/errors. Complete automated suite: 97 passed (57 Core, 40 Infrastructure). CI-filtered local selection: 95 passed (57 Core, 38 Infrastructure). Local WPF smoke passed with no binding errors. No live LAN scan or WoL packet was sent during verification.
+
+## Milestone D — 2026-09-26
+- Release solution build: zero warnings/errors. Full automated suite: **109 passed** (57 Core, 52 Infrastructure); CI excludes two LocalNetwork tests, leaving 107.
+- New offline coverage verifies profile/credential persistence and reuse, referential deletion protection, copied metadata with missing-secret recovery, unchanged references after replacement, native error classification, no plaintext fallback, known-host identity/port/change handling and corrupt trust rejection.
+- WPF smoke passes with actual populated Connections view bindings, missing-secret presentation and SSH device actions. Metadata rendering uses a fake store that throws if asked to read a secret.
+- Explicit local SSH fixture passed: native Windows credential create/read/update/delete, rejected unknown host, approved/persisted identity, wrong-password classification, encrypted private-key authentication, PTY resize and rejection of a changed server key. It binds only 127.0.0.1 on an ephemeral port. Disposable GUID credential entries are deleted in finally; no homelab credentials or hosts are used.
+- Terminal smoke passed: installed Evergreen and local embedded assets, ANSI color, split UTF-8 output, input forwarding, resize, selection, CSP external-request rejection, reconnect and Data/WebView2 placement. Captured terminal rendering reviewed. The same smoke passed from a self-contained single-file executable, validating native WebView2 loader extraction.
+- Portable publish keeps MythLab.exe and a Notices folder alongside existing Data. Fixed WebView2 runtime is not bundled. SDK XML documentation is omitted. Existing user Data is not modified by publishing.
+- NuGet reported no known vulnerable packages in the configured source. License inventory includes SSH.NET/BouncyCastle/WebView2; xterm assets, provenance and hashes are recorded separately.
+- Local UI/SSH/native credential smoke remains outside headless CI. No live LAN scan or real WoL packet is used. Manual server compatibility (vim/top), clipboard interaction, IME, accessibility, DPI transitions, multiple simultaneous long-running terminals, missing-runtime and denied-folder cases remain acceptance checks; automated success does not claim those were exercised.
+
+### Reproduce local terminal and SSH smoke
+Run from the repository root on Windows:
+```powershell
+dotnet run --project tools/MythLab.SmokeTests -c Release
+dotnet run --project tools/MythLab.SmokeTests -c Release -- --terminal-smoke
+python -m pip install --target artifacts/ssh-spike/python paramiko==4.0.0
+python tools/ssh-fixture.py
+# In another shell while the fixture runs:
+dotnet run --project tools/MythLab.SmokeTests -c Release -- --ssh-smoke
+```
+The last command signals the fixture to stop. Paramiko (LGPL-2.1) and its pip dependencies are development-only and are never copied into the app or committed. Test key/password strings are disposable fixture values only. The fixture writes its generated key under ignored artifacts/ssh-spike. After an interrupted test, remove only credential entries beginning Homelab.RemoteManager.DisposableSmoke/credentials/ if cleanup did not run.
+
+To verify single-file rendering, publish the smoke project with win-x64, SelfContained, PublishSingleFile and IncludeNativeLibrariesForSelfExtract enabled to an ignored artifacts folder, then run its executable with --terminal-smoke. Use a temporary NuGetLockFilePath so this explicit smoke publish does not change the normal project lockfiles.

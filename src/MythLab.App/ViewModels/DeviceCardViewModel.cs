@@ -5,6 +5,9 @@ namespace MythLab.App.ViewModels;
 public sealed class DeviceCardViewModel(Device device) : ObservableObject
 {
     public Device Device { get; private set; } = device;
+    public IReadOnlyList<Core.Connections.ConnectionProfile> SshProfiles { get; private set; } = [];
+    public void SetProfiles(IReadOnlyList<Core.Connections.ConnectionProfile> profiles)
+    { SshProfiles = profiles; OnPropertyChanged(nameof(SshProfiles)); }
     public Guid Id => Device.Id;
     public string DisplayName => Device.DisplayName;
     public string Endpoint => Device.Endpoint;

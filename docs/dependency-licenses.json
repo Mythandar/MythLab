@@ -1,5 +1,11 @@
 ﻿[
     {
+        "package":  "BouncyCastle.Cryptography/2.7.0",
+        "licenseType":  "expression",
+        "license":  "MIT",
+        "projectUrl":  "https://www.bouncycastle.org/stable/nuget/csharp/website"
+    },
+    {
         "package":  "CommunityToolkit.Mvvm/8.4.0",
         "licenseType":  "expression",
         "license":  "MIT",
@@ -84,6 +90,12 @@
         "projectUrl":  "https://github.com/microsoft/vstest"
     },
     {
+        "package":  "Microsoft.Web.WebView2/1.0.4191.47",
+        "licenseType":  "file",
+        "license":  "LICENSE.txt",
+        "projectUrl":  "https://aka.ms/webview"
+    },
+    {
         "package":  "Newtonsoft.Json/13.0.3",
         "licenseType":  "expression",
         "license":  "MIT",
@@ -129,6 +141,12 @@
         "package":  "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
         "licenseType":  "expression",
         "license":  "Apache-2.0",
+        "projectUrl":  null
+    },
+    {
+        "package":  "SSH.NET/2026.0.0",
+        "licenseType":  "expression",
+        "license":  "MIT",
         "projectUrl":  null
     },
     {

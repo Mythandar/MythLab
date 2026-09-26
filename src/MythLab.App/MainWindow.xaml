@@ -20,14 +20,7 @@
    </TabControl.Resources>
    <TabItem Header="My Devices"><views:DevicesView/></TabItem>
    <TabItem Header="Discovery"><views:DiscoveryView DataContext="{Binding Discovery}"/></TabItem>
-   <TabItem Header="Connections / Credentials">
-    <StackPanel Margin="8">
-     <TextBlock Text="Connections &amp; credentials" FontSize="28" FontWeight="SemiBold"/>
-     <TextBlock Text="Coming in Milestones D and E" Margin="0,12,0,20" Opacity=".65"/>
-     <TextBlock Text="Each device can have multiple SSH, RealVNC, Moonlight, web and custom connections." MaxWidth="640" HorizontalAlignment="Left"/>
-     <TextBlock Text="Reusable credentials will be saved securely by Windows. This version does not collect or save passwords." Margin="0,16,0,0" MaxWidth="640" HorizontalAlignment="Left"/>
-    </StackPanel>
-   </TabItem>
+   <TabItem Header="Connections / Credentials"><views:ConnectionsView DataContext="{Binding Connections}"/></TabItem>
    <TabItem Header="Settings"><views:SettingsView/></TabItem>
    <TabItem Header="Diagnostics">
     <Grid Margin="8">

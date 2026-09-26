@@ -8,4 +8,12 @@
 <PackageReference Include="Serilog.Extensions.Logging" />
 <PackageReference Include="Serilog.Sinks.File" />
 </ItemGroup>
+<ItemGroup><PackageReference Include="Microsoft.Web.WebView2" /><EmbeddedResource Include="TerminalAssets/**/*" /></ItemGroup><Target Name="ExcludeSdkXmlDocumentationFromPublish" AfterTargets="ComputeFilesToPublish">
+  <ItemGroup><ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(ResolvedFileToPublish.Extension)' == '.xml'" /></ItemGroup>
+</Target>
+<ItemGroup>
+  <Content Include="../../docs/licenses/**/*" Link="Notices/licenses/%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  <Content Include="../../docs/THIRD-PARTY-NOTICES.md;../../docs/dependency-licenses.json;../../docs/terminal-asset-hashes.json" Link="Notices/%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  <Content Include="TerminalAssets/*LICENSE.txt" Link="Notices/%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+</ItemGroup>
 </Project>

@@ -34,7 +34,13 @@ public partial class App : Application
             collection.AddSingleton(paths);
             collection.AddSingleton(recent);
             collection.AddLogging(builder => builder.ClearProviders().AddSerilog(dispose: false));
-            collection.AddSingleton<IDeviceRepository>(_ => new SqliteDeviceRepository(paths.Database));
+            collection.AddSingleton<SqliteDeviceRepository>(_ => new SqliteDeviceRepository(paths.Database));
+            collection.AddSingleton<IDeviceRepository>(sp => sp.GetRequiredService<SqliteDeviceRepository>());
+            collection.AddSingleton<Core.Connections.IConnectionRepository>(sp => sp.GetRequiredService<SqliteDeviceRepository>());
+            collection.AddSingleton<Core.Credentials.ICredentialStore>(_ => new Infrastructure.Credentials.WindowsCredentialStore(AppIdentity.DataId));
+            collection.AddSingleton(_ => new Infrastructure.Ssh.KnownHostsStore(paths.KnownHosts));
+            collection.AddSingleton<Infrastructure.Ssh.SshSessionService>();
+            collection.AddSingleton<ConnectionsViewModel>();
             collection.AddSingleton(_ => new SettingsStore(paths.Settings));
             collection.AddSingleton<Views.DeviceDialogs>();
             collection.AddSingleton<Core.Discovery.ILanProbe, Infrastructure.Discovery.WindowsLanProbe>();

@@ -31,12 +31,12 @@ If Data does not yet exist and the original %LOCALAPPDATA%/Homelab.RemoteManager
 ## Portability boundaries
 - All ordinary application data uses AppContext.BaseDirectory/Data, never the current working directory or a native extraction directory.
 - .NET's bundled native libraries extract into the Windows temporary cache at runtime. This is executable/runtime material, not inventory or settings. This is a no-install portable app, not a promise of zero filesystem traces.
-- Future Windows Credential Manager secrets belong to Windows' secure user store and do not automatically move with Data. No passwords are saved in this milestone. Any future portable encrypted vault or credential transfer needs an explicit design; portable mode must not introduce plaintext password storage.
-- Future private-key/executable paths may need updating on another PC. Prefer relative paths for intentionally bundled user assets.
-- Future WebView2 user data/cache uses Data/WebView2. Prefer installed Evergreen with lazy terminal-only detection. Do not bundle Fixed Version by default, and do not require WebView2 for inventory/discovery/wake. See DATA-SECURITY.md.
+- Windows Credential Manager secrets belong to Windows' secure user store and do not automatically move with Data. Use Edit / recreate on a missing credential after moving the folder. Any future portable encrypted vault or credential transfer needs an explicit design; portable mode must not introduce plaintext password storage.
+- Private-key/executable paths may need updating on another PC. Prefer relative paths for intentionally bundled user assets.
+- WebView2 user data/cache uses Data/WebView2. Prefer installed Evergreen with lazy terminal-only detection. Do not bundle Fixed Version by default, and do not require WebView2 for inventory/discovery/wake. See DATA-SECURITY.md.
 - Self-contained .NET runtime updates require rebuilding/replacing the executable. Publish trimming is disabled for WPF.
 - When distributing beyond local development, ship the required runtime and third-party notices (a notices subfolder is acceptable); the dependency inventory remains in docs.
 
 Sources: [Microsoft single-file deployment](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview), [Windows credential handling](https://learn.microsoft.com/en-us/windows/win32/secbp/handling-passwords).
 
-Portable data and nonportable secrets are a fixed v0.1 boundary: a moved profile with a missing Windows credential must be repaired by recreating the same credential reference, not by deleting the profile or falling back to plaintext. Known-host records are reserved under Data/ssh/known-hosts.json. Startup tests Data and log-folder write access explicitly.
+Portable data and nonportable secrets are a fixed v0.1 boundary: a moved profile with a missing Windows credential must be repaired by recreating the same credential reference, not by deleting the profile or falling back to plaintext. Known-host records are stored under Data/ssh/known-hosts.json. Startup tests Data and log-folder write access explicitly.

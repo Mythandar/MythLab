@@ -18,14 +18,19 @@ Exact installed versions are recorded in Directory.Packages.props and packages.l
 | Microsoft.NET.Test.Sdk / TestPlatform | MIT | Test infrastructure |
 | Newtonsoft.Json (test transitive dependency if resolved) | MIT | Test runner dependency |
 
-## Candidates only — not installed in Milestone A
-| Component | License | Decision |
-| --- | --- | --- |
-| [SSH.NET](https://github.com/sshnet/SSH.NET/blob/develop/LICENSE) | MIT | Preferred SSH transport; audit selected version's transitives when added |
-| [xterm.js and fit addon](https://github.com/xtermjs/xterm.js/blob/master/LICENSE) | MIT | Candidate terminal renderer, bundle assets and license locally |
-| [Microsoft.Web.WebView2 SDK](https://www.nuget.org/packages/Microsoft.Web.WebView2) | Microsoft proprietary SDK terms | Candidate WPF host; retain package LICENSE when adopted |
-| [WebView2 Runtime](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution) | Microsoft runtime distribution terms | Prefer Evergreen, document deployment prerequisite |
+## SSH terminal dependencies — installed in Milestone D
+| Component | Version | License | Reason |
+| --- | --- | --- | --- |
+| SSH.NET | 2026.0.0 | MIT | Managed SSH transport, key verification and PTY ShellStream |
+| BouncyCastle.Cryptography | 2.7.0 | MIT | SSH.NET cryptographic dependency |
+| Microsoft.Web.WebView2 SDK | 1.0.4191.47 | Microsoft proprietary SDK terms | WPF terminal host; license/notice copied from package |
+| @xterm/xterm | 6.0.0 | MIT | Maintained VT terminal rendering |
+| @xterm/addon-fit | 0.11.0 | MIT | Fit terminal geometry to its window |
+| Evergreen WebView2 Runtime | Installed, independently serviced | Microsoft runtime terms | Detected lazily; not redistributed |
 
-RealVNC and Moonlight are independently installed programs, not dependencies distributed by this project. No terminal library, browser runtime or external launcher is redistributed yet. This is an engineering inventory, not a license chosen for the new application's own source.
+xterm assets are copied from the official npm tarballs https://registry.npmjs.org/@xterm/xterm/-/xterm-6.0.0.tgz and https://registry.npmjs.org/@xterm/addon-fit/-/addon-fit-0.11.0.tgz: package/lib/xterm.js, package/css/xterm.css, package/lib/addon-fit.js and their LICENSE files. They are embedded in the executable, never fetched at runtime. Selected-file SHA-256 hashes are in terminal-asset-hashes.json. Custom index.html, terminal.js and terminal.css are application source, not upstream assets.
 
+SSH.NET's license is retained from its 2026.0.0 tag. Other package-provided licenses/notices and self-contained .NET/WPF redistribution notices are under docs/licenses. Publish copies these and the xterm licenses into a Notices directory; keep that directory with distributed builds. Dependency license metadata remains in dependency-licenses.json.
+
+RealVNC and Moonlight are independently installed programs, not distributed dependencies. Paramiko 4.0.0 (LGPL-2.1) is an optional local development-only SSH test fixture dependency, not an application dependency. No application source license has been selected.
 Portable publishing also resolves Microsoft.NET.ILLink.Tasks 10.0.11 (MIT) as SDK build tooling. It does not enable trimming. The self-contained executable embeds the Windows .NET runtime; preserve its redistribution notices when packaging a release for others.

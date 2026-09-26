@@ -35,6 +35,8 @@ internal static class Program
             var directory = Path.Combine(Path.GetTempPath(), "MythLab.Smoke", Guid.NewGuid().ToString("N"));
             try
             {
+                if (args.Contains("--ssh-smoke")) { await SshSmoke.RunAsync(); result = 0; return; }
+                if (args.Contains("--terminal-smoke")) { await TerminalSmoke.RunAsync(); result = 0; return; }
                 if (args.Contains("--network-smoke")) { result = await NetworkSmoke.RunAsync(); return; }
                 using var repository = new SqliteDeviceRepository(Path.Combine(directory, "inventory.db"));
                 using var settings = new SettingsStore(Path.Combine(directory, "settings.json"));
@@ -46,8 +48,13 @@ internal static class Program
                     repository, settings, dialogs, loggerFactory.CreateLogger<DiscoveryViewModel>());
                 var smokeStatus = new SmokeStatus();
                 var smokeWake = new SmokeWake();
+                var secrets = new SmokeSecrets();
+                var hosts = new MythLab.Infrastructure.Ssh.KnownHostsStore(Path.Combine(directory, "known-hosts.json"));
+                var connections = new ConnectionsViewModel(repository, repository, secrets, hosts,
+                    new MythLab.Infrastructure.Ssh.SshSessionService(secrets, hosts, loggerFactory.CreateLogger<MythLab.Infrastructure.Ssh.SshSessionService>()),
+                    new AppPaths("Smoke", directory), loggerFactory.CreateLogger<ConnectionsViewModel>());
                 var shell = new ShellViewModel(repository, settings, new RecentLogSink(), logger,
-                    new AppPaths(AppIdentity.DataId), dialogs, discovery, new DeviceActivityViewModel(repository, smokeStatus, new MythLab.Infrastructure.WakeOnLan.WakeDeviceService(smokeWake, smokeStatus), loggerFactory.CreateLogger<DeviceActivityViewModel>()));
+                    new AppPaths(AppIdentity.DataId), dialogs, discovery, new DeviceActivityViewModel(repository, smokeStatus, new MythLab.Infrastructure.WakeOnLan.WakeDeviceService(smokeWake, smokeStatus), loggerFactory.CreateLogger<DeviceActivityViewModel>()), connections);
                 await repository.InitializeAsync();
                 await shell.LoadAsync();
                 var main = new MainWindow(shell);
@@ -73,6 +80,13 @@ internal static class Program
                 Require(saved && editor.Error.Length == 0, "Editor save must succeed.");
                 await shell.LoadAsync();
                 Require(shell.Devices.Count == 1, "Saved device must appear in inventory.");
+                var credential = new MythLab.Core.Credentials.CredentialReference { DisplayLabel = "Linux fixture", Username = "fixture" };
+                await repository.SaveCredentialAsync(credential);
+                await repository.SaveProfileAsync(new MythLab.Core.Connections.ConnectionProfile { DisplayName = "SSH", DeviceId = shell.Devices[0].Device.Id,
+                    Kind = MythLab.Core.Connections.ConnectionKind.Ssh, CredentialId = credential.Id, Port = 22 });
+                await shell.LoadAsync();
+                Require(connections.Credentials.Single().Availability.StartsWith("Missing credential"), "Copied credential must be visibly missing.");
+                Require(shell.Devices[0].SshProfiles.Count == 1, "SSH action must appear on its device.");
                 await RenderAsync(main, "inventory-light.png");
                 shell.Search = "unmatched";
                 Require(shell.FilteredDevices.IsEmpty, "Search must filter inventory.");
@@ -315,4 +329,12 @@ internal sealed class SmokeWake : MythLab.Core.WakeOnLan.IWakeOnLanService
         Calls++;
         return Task.FromResult(new MythLab.Core.WakeOnLan.WakeSendReport(new(new("fake", 1, "Fake", "10.0.0.1", "255.255.255.0", ""), "10.0.0.255", 9), 3));
     }
+}
+
+internal sealed class SmokeSecrets : MythLab.Core.Credentials.ICredentialStore
+{
+    public Task<MythLab.Core.Credentials.SecretStatus> InspectAsync(Guid id, CancellationToken token = default) => Task.FromResult(MythLab.Core.Credentials.SecretStatus.Missing);
+    public Task<string?> ReadAsync(Guid id, CancellationToken token = default) => throw new InvalidOperationException("UI metadata loading must not read secrets.");
+    public Task WriteAsync(Guid id, string value, CancellationToken token = default) => throw new NotSupportedException();
+    public Task DeleteAsync(Guid id, CancellationToken token = default) => throw new NotSupportedException();
 }
