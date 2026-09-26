@@ -56,7 +56,7 @@ internal sealed class MetadataEditor : Window
 
 public static class ConnectionDialogs
 {
-    public static bool EditCredential(IConnectionRepository repository, ICredentialStore secrets, CredentialReference? value)
+    public static bool EditCredential(CredentialSaveService saver, CredentialReference? value)
     {
         var original = value ?? new CredentialReference();
         var window = new MetadataEditor(value is null ? "Add credential" : "Edit / recreate credential");
@@ -84,18 +84,8 @@ public static class ConnectionDialogs
             if (updated.Authentication == AuthenticationKind.PrivateKey &&
                 !File.Exists(Path.GetFullPath(updated.PrivateKeyPath, AppContext.BaseDirectory)))
                 throw new ArgumentException("Select an existing private-key file.");
-            if (updated.Authentication == AuthenticationKind.Password && replace.IsChecked != true &&
-                (value is null || original.Authentication != updated.Authentication || await secrets.InspectAsync(original.Id) != SecretStatus.Available))
-                throw new ArgumentException("Enter a password and enable Save / replace.");
-            if (replace.IsChecked == true)
-            {
-                if (updated.Authentication == AuthenticationKind.Password && secret.Password.Length == 0)
-                    throw new ArgumentException("Enter the password.");
-                await secrets.WriteAsync(original.Id, secret.Password);
-                secret.Clear(); // never read the stored value back into the UI
-            }
-            else if (original.Authentication != updated.Authentication) await secrets.DeleteAsync(original.Id);
-            await repository.SaveCredentialAsync(updated);
+            await saver.SaveAsync(updated, replace.IsChecked == true, replace.IsChecked == true ? secret.Password : null);
+            secret.Clear(); // previous secrets are never returned by the service or shown in the UI
         });
         return window.ShowDialog() == true;
     }

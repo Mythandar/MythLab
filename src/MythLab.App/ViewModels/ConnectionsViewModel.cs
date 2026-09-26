@@ -30,6 +30,7 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
     public ObservableCollection<ProfileRow> Profiles { get; } = [];
     public ObservableCollection<KnownHost> KnownHosts { get; } = [];
     private readonly HashSet<TerminalWindow> terminals = [];
+    private readonly CredentialSaveService credentialSaver = new(repository, secrets);
     [ObservableProperty] private CredentialRow? selectedCredential;
     [ObservableProperty] private ProfileRow? selectedProfile;
     [ObservableProperty] private KnownHost? selectedHost;
@@ -62,11 +63,11 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
     [RelayCommand] private Task RefreshAsync() => RunAsync(() => LoadAsync());
     [RelayCommand] private Task AddCredentialAsync() => RunAsync(async () =>
     {
-        if (ConnectionDialogs.EditCredential(repository, secrets, null)) { await LoadAsync(); Message = "Credential saved securely by Windows."; }
+        if (ConnectionDialogs.EditCredential(credentialSaver, null)) { await LoadAsync(); Message = "Credential saved securely by Windows."; }
     });
     [RelayCommand] private Task EditCredentialAsync() => RunAsync(async () =>
     {
-        if (SelectedCredential is { } row && ConnectionDialogs.EditCredential(repository, secrets, row.Credential))
+        if (SelectedCredential is { } row && ConnectionDialogs.EditCredential(credentialSaver, row.Credential))
         { await LoadAsync(); Message = "Credential updated; existing profiles retain their reference."; }
     });
     [RelayCommand] private Task DeleteCredentialAsync() => RunAsync(async () =>

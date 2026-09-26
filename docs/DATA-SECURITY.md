@@ -32,3 +32,5 @@ Do not register a WebView2 environment that starts at app startup. Validate Data
 Milestone D implements these storage and lazy-initialization boundaries. Unit tests cover copied metadata and missing/denied secrets; native and browser smoke tests remain local. Missing-runtime and access-policy behavior still require manual acceptance on a machine configured for those cases. See SSH.md.
 
 Sources: [WebView2 distribution](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution), [WebView2 user data](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/user-data-folder), [Windows credentials](https://learn.microsoft.com/en-us/windows/win32/api/wincred/nf-wincred-credreadw).
+
+Credential save compensation snapshots old secrets only in memory. Save failures restore the prior state where possible; rollback failures explicitly require manual repair. No cross-store atomic/crash-recovery guarantee is made. See ARCHITECTURE.md and SSH.md.

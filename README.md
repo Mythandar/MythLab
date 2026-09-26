@@ -18,6 +18,6 @@ Normal data is stored in a Data folder beside the executable. A single-executabl
 
 The GitHub repository is [Mythandar/MythLab](https://github.com/Mythandar/MythLab). No installer has been created. A root project license has not been selected; the owner must choose one before intending open-source reuse. Dependency licenses are listed separately in [third-party notices](docs/THIRD-PARTY-NOTICES.md).
 
-Verification: Release build clean, 109 tests passing, offscreen WPF smoke checks passing. See [verification details](docs/VERIFICATION.md). Run the UI harness with `dotnet run --project tools/MythLab.SmokeTests -c Release`.
+Verification: Release build clean, 128 tests passing, offscreen WPF smoke checks passing. See [verification details](docs/VERIFICATION.md). Run the UI harness with `dotnet run --project tools/MythLab.SmokeTests -c Release`.
 
 See [Wake-on-LAN/status](docs/WAKE-ON-LAN.md), [LAN discovery](docs/DISCOVERY.md) for scan behavior and limitations, and [data/security policy](docs/DATA-SECURITY.md) for portable metadata versus Windows-secured secrets. Only the integrated SSH terminal requires installed Evergreen WebView2. See [SSH setup and limitations](docs/SSH.md).

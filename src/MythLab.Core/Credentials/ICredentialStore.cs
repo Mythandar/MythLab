@@ -4,7 +4,7 @@ public sealed class CredentialStoreException(SecretStatus status) : Exception($"
 {
     public SecretStatus Status { get; } = status;
 }
-/// <summary>Secrets cross this boundary only for native authentication or explicit replacement. Never serialize them.</summary>
+/// <summary>Secrets cross this boundary only for native authentication or in-memory compensating updates. Never serialize them.</summary>
 public interface ICredentialStore
 {
     Task<SecretStatus> InspectAsync(Guid id, CancellationToken token = default);

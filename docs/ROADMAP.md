@@ -69,3 +69,5 @@ Milestone C verification: clean Release build; 93 automated tests and WPF monito
 Pre-D review complete: cache-aware discovery without skipping live checks, truthful scan-read timestamps, multi-address status checks and offline Windows CI. Milestone D was subsequently implemented; see the entry below. See VERIFICATION.md.
 
 Milestone D: reusable Windows credentials, persisted SSH profiles, explicit known-host trust, password/key authentication and functional integrated terminal implemented. 109 automated tests pass; native loopback SSH and local renderer smoke pass. Manual terminal compatibility checks remain documented in SSH.md. Milestone E is next; no E/F features were implemented.
+
+Focused D review complete: testable compensating credential saves, explicit browser reopen recovery, and automatic close after metadata work. 128 automated tests and local WPF/terminal/SSH smoke pass. Milestone E remains next.

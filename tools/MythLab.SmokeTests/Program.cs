@@ -233,7 +233,25 @@ internal static class Program
                 var shutdownScan = discovery.ScanCommand.ExecuteAsync(null);
                 var shutdownWake = shell.Activity.WakeCommand.ExecuteAsync(targetCard);
                 shell.Activity.Start();
+                var windowClosed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                main.Closed += (_, _) => windowClosed.TrySetResult();
+                var saveRelease = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                var wroteMetadata = false;
+                var saveTask = (Task)typeof(ConnectionsViewModel).GetMethod("RunAsync", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                    .Invoke(connections, new object[] { (Func<Task>)(async () =>
+                    {
+                        await saveRelease.Task;
+                        await repository.SaveCredentialAsync(credential with { DisplayLabel = "Saved before shutdown" });
+                        wroteMetadata = true;
+                    }) })!;
                 main.Close();
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                Require(main.IsVisible && !main.IsEnabled && connections.IsBusy && !wroteMetadata,
+                    "Close must wait for active metadata work without cancelling it.");
+                saveRelease.SetResult();
+                await saveTask;
+                Require(wroteMetadata, "Pending metadata save must finish before shutdown.");
+                await windowClosed.Task.WaitAsync(TimeSpan.FromSeconds(5));
                 await shutdownWake.WaitAsync(TimeSpan.FromSeconds(5));
                 await shutdownScan.WaitAsync(TimeSpan.FromSeconds(5));
                 await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);

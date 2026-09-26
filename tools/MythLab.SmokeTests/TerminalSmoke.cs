@@ -15,6 +15,24 @@ internal static class TerminalSmoke
     {
         var folder = Path.GetFullPath("artifacts/terminal-spike/" + Guid.NewGuid().ToString("N"));
         var paths = new AppPaths("MythLab.Spike", folder);
+        Directory.CreateDirectory(Path.GetDirectoryName(paths.WebView2UserData)!);
+        await File.WriteAllTextAsync(paths.WebView2UserData, "fixture prevents browser directory creation");
+        var unexpectedConnect = false;
+        var failed = new TerminalWindow(paths, "Initialization failure", _ =>
+        {
+            unexpectedConnect = true; return Task.FromResult<ITerminalSession>(new FakeTerminal());
+        }) { ShowInTaskbar = false, ShowActivated = false, Left = -30000, Top = -30000 };
+        failed.Show();
+        try
+        {
+            var reconnectButton = (System.Windows.Controls.Button)typeof(TerminalWindow).GetField("reconnect", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(failed)!;
+            var status = (System.Windows.Controls.TextBlock)typeof(TerminalWindow).GetField("status", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(failed)!;
+            await UntilAsync(() => Task.FromResult(!reconnectButton.IsEnabled && status.Text.Contains("close and reopen")), "Initialization failure must explicitly require reopening and disable Reconnect.");
+            File.Delete(paths.WebView2UserData); // remove only this fixture file; the next window can initialize normally
+            await (Task)typeof(TerminalWindow).GetMethod("ReconnectAsync", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(failed, null)!;
+            if (unexpectedConnect) throw new InvalidOperationException("Failed renderer must not reconnect or authenticate.");
+        }
+        finally { await failed.CloseSessionAsync(); }
         FakeTerminal? current = null;
         var connects = 0;
         var window = new TerminalWindow(paths, "Terminal spike", _ =>
@@ -46,7 +64,7 @@ internal static class TerminalSmoke
             _ = (Task)typeof(TerminalWindow).GetMethod("ReconnectAsync", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, null)!;
             await UntilAsync(() => Task.FromResult(connects == 2), "Reconnect did not create a fresh session.");
             if (!Directory.Exists(paths.WebView2UserData)) throw new InvalidOperationException("WebView2 cache is not under portable Data.");
-            Console.WriteLine("PASS: Evergreen/local assets, ANSI, split UTF-8, input, resize, selection, CSP, reconnect and portable browser data.");
+            Console.WriteLine("PASS: initialization failure/reopen recovery, Evergreen/local assets, ANSI, split UTF-8, input, resize, selection, CSP, reconnect and portable browser data.");
         }
         finally { await window.CloseSessionAsync(); }
     }

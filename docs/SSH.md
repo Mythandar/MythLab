@@ -27,3 +27,10 @@ Only terminals require installed Evergreen WebView2. A missing runtime is report
 Terminal input/output is not logged or captured by MythLab. The bridge denies external navigation/downloads/permissions, restricts assets to its local origin, validates messages and disables terminal clipboard escape sequences. Explicit user copy/paste still uses the Windows clipboard. Output is bounded; stalled rendering or excessive backlog disconnects instead of growing without limit.
 
 Initial functional terminal validation covers ANSI, split UTF-8, input, resize, selection, CSP, reconnect, real password/key transport and changed-host rejection. Manual acceptance on the user's servers (vim/top, IME, screen reader, DPI changes and sustained workloads) remains necessary.
+
+## Save failures and recovery
+Credential saves compensate across SQLite and Windows Credential Manager. If either step fails, MythLab attempts to restore the previous metadata and secret; a new secret is removed when the new metadata cannot be saved. Old secrets used for rollback exist only in memory, never in password fields or files. Authentication-type changes clear or replace the old authentication secret.
+
+If rollback fails, the editor explicitly says manual credential repair may be required. Before connecting, review the credential's authentication type, username and key path and replace/recreate the correct Windows secret. These are not true cross-store transactions: an application/process crash or concurrent edits from another instance can also require repair. Do not assume a failed save succeeded.
+
+Closing during metadata work waits for it to finish and then closes automatically. If WebView2 initialization fails, Reconnect is disabled: correct the runtime/cache-directory problem, close that terminal and open a new one. Ordinary SSH authentication/network failures can still use Reconnect.

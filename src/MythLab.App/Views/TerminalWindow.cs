@@ -17,6 +17,8 @@ public sealed class TerminalWindow : Window
 {
     private const string Origin = "https://terminal.mythlab.invalid/";
     private readonly WebView2 browser = new();
+    private readonly Button reconnect = new() { Content = "Reconnect" };
+    private bool requiresReopen;
     private readonly TextBlock status = new() { Text = "Opening terminal…", Margin = new(10), TextWrapping = TextWrapping.Wrap };
     private readonly AppPaths paths;
     private readonly Func<CancellationToken, Task<ITerminalSession>> connect;
@@ -39,7 +41,7 @@ public sealed class TerminalWindow : Window
         {
             var button = new Button { Content = label }; button.Click += handler; toolbar.Children.Add(button);
         }
-        Button("Reconnect", async (_, _) => await ReconnectAsync());
+        reconnect.Click += async (_, _) => await ReconnectAsync(); toolbar.Children.Add(reconnect);
         Button("Disconnect", async (_, _) => await StopAsync());
         Button("Copy selection", async (_, _) => { if (browser.CoreWebView2 is not null) await browser.ExecuteScriptAsync("requestCopy()"); });
         Button("Paste", (_, _) => Paste());
@@ -52,6 +54,17 @@ public sealed class TerminalWindow : Window
         Closing += OnClosing;
     }
     private async Task InitializeBrowserAsync()
+    {
+        try { await InitializeBrowserCoreAsync(); }
+        catch (Exception ex)
+        {
+            requiresReopen = true; reconnect.IsEnabled = false;
+            // Initialization can finish after Disconnect stops waiting for it.
+            status.Text = $"Terminal initialization failed ({ex.GetType().Name}). Correct the problem, then close and reopen this terminal. Reconnect is disabled.";
+            throw;
+        }
+    }
+    private async Task InitializeBrowserCoreAsync()
     {
         // No fixed runtime; inventory startup never calls this method.
         try { _ = CoreWebView2Environment.GetAvailableBrowserVersionString(); }
@@ -84,7 +97,7 @@ public sealed class TerminalWindow : Window
                 stream is null ? "Forbidden" : "OK", $"Content-Type: {contentType}; charset=utf-8\r\nCache-Control: no-store");
         };
         core.WebMessageReceived += OnMessage;
-        core.ProcessFailed += (_, _) => { status.Text = "The terminal renderer stopped. Close and reopen this terminal."; cancellation?.Cancel(); };
+        core.ProcessFailed += (_, _) => { requiresReopen = true; reconnect.IsEnabled = false; status.Text = "The terminal renderer stopped. Close and reopen this terminal."; cancellation?.Cancel(); };
         core.Navigate(Origin + "index.html");
         await ready.Task.WaitAsync(TimeSpan.FromSeconds(20));
     }
@@ -142,7 +155,7 @@ public sealed class TerminalWindow : Window
     }
     private async Task ReconnectAsync()
     {
-        if (closing || restarting) return;
+        if (closing || restarting || requiresReopen) return;
         restarting = true;
         try
         {
@@ -181,7 +194,7 @@ public sealed class TerminalWindow : Window
                 await acknowledgement.Task.WaitAsync(TimeSpan.FromSeconds(15), token);
             }
         }
-        catch (OperationCanceledException) { status.Text = "Disconnected."; }
+        catch (OperationCanceledException) { status.Text = requiresReopen ? "Renderer unavailable. Correct the problem, then close and reopen this terminal." : "Disconnected."; }
         catch (Exception ex)
         {
             status.Text = ex is InvalidOperationException or TimeoutException or Infrastructure.Ssh.HostIdentityException or Core.Credentials.CredentialStoreException
@@ -189,6 +202,7 @@ public sealed class TerminalWindow : Window
         }
         finally
         {
+            if (requiresReopen) status.Text += " Correct the problem, then close and reopen this terminal. Reconnect is disabled.";
             cancellation?.Cancel();
             if (session is not null) { try { await session.DisposeAsync(); } catch { status.Text = "Session closed with a transport cleanup error."; } finally { session = null; } }
             if (writer is not null) { try { await writer; } catch (Exception) { /* No raw transport detail or input is logged. */ } }
