@@ -23,7 +23,7 @@ Exact installed versions are recorded in Directory.Packages.props and packages.l
 | --- | --- | --- | --- |
 | SSH.NET | 2026.0.0 | MIT | Managed SSH transport, key verification and PTY ShellStream |
 | BouncyCastle.Cryptography | 2.7.0 | MIT | SSH.NET cryptographic dependency |
-| Microsoft.Web.WebView2 SDK | 1.0.4191.47 | Microsoft proprietary SDK terms | WPF terminal host; license/notice copied from package |
+| Microsoft.Web.WebView2 SDK | 1.0.4191.47 | BSD-3-Clause (Microsoft copyright; selected package LICENSE.txt) | WPF terminal host; license/notice copied from package |
 | @xterm/xterm | 6.0.0 | MIT | Maintained VT terminal rendering |
 | @xterm/addon-fit | 0.11.0 | MIT | Fit terminal geometry to its window |
 | Evergreen WebView2 Runtime | Installed, independently serviced | Microsoft runtime terms | Detected lazily; not redistributed |
