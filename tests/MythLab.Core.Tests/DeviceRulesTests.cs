@@ -42,9 +42,32 @@ public sealed class DeviceRulesTests
     public void RejectsInvalidIPv4(string value) => Assert.Throws<DeviceValidationException>(() =>
         DeviceRules.NormalizeAndValidate(new Device { DisplayName = "NAS", IPv4Address = value }));
 
-    [Fact]
-    public void IPv4OctetsAreAlwaysDecimal() => Assert.Equal("10.0.0.1",
-        DeviceRules.NormalizeAndValidate(new Device { DisplayName = "PC", IPv4Address = "010.000.000.001" }).IPv4Address);
+    [Theory]
+    [InlineData("0.0.0.0")]
+    [InlineData("10.0.0.1")]
+    [InlineData("192.168.1.1")]
+    [InlineData("255.255.255.255")]
+    public void AcceptsCanonicalIPv4AndBroadcast(string value)
+    {
+        var result = DeviceRules.NormalizeAndValidate(new Device { DisplayName = "PC", IPv4Address = value,
+            Wake = new() { BroadcastAddress = value } });
+        Assert.Equal(value, result.IPv4Address);
+        Assert.Equal(value, result.Wake.BroadcastAddress);
+    }
+
+    [Theory]
+    [InlineData("01.2.3.4")]
+    [InlineData("192.168.001.1")]
+    [InlineData("10.00.0.1")]
+    [InlineData("192.168.001.001")]
+    [InlineData("010.000.000.001")]
+    public void RejectsZeroPaddedIPv4AndBroadcast(string value)
+    {
+        Assert.Throws<DeviceValidationException>(() => DeviceRules.NormalizeAndValidate(
+            new Device { DisplayName = "PC", IPv4Address = value }));
+        Assert.Throws<DeviceValidationException>(() => DeviceRules.NormalizeAndValidate(
+            new Device { DisplayName = "PC", Hostname = "pc.local", Wake = new() { BroadcastAddress = value } }));
+    }
 
     [Fact]
     public void RequiresEndpoint() => Assert.Throws<DeviceValidationException>(() =>

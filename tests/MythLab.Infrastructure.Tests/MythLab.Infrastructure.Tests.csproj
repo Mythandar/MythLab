@@ -6,5 +6,7 @@
 <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
 <ProjectReference Include="../../src/MythLab.Infrastructure/MythLab.Infrastructure.csproj" />
 <Using Include="Xunit" />
+<!-- Test the pure startup presenter without introducing a WPF/app dependency into this test project. -->
+<Compile Include="../../src/MythLab.App/Diagnostics/StartupDiagnostics.cs" Link="AppDiagnostics/StartupDiagnostics.cs" />
 </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        var startupStage = StartupStage.PortableData;
         try
         {
             var paths = new AppPaths(AppIdentity.DataId);
@@ -30,6 +31,7 @@ public partial class App : Application
                     rollingInterval: RollingInterval.Day, fileSizeLimitBytes: 5_000_000,
                     rollOnFileSizeLimit: true, retainedFileCountLimit: 7, shared: true)
                 .CreateLogger();
+            startupStage = StartupStage.Initialization;
             var collection = new ServiceCollection();
             collection.AddSingleton(paths);
             collection.AddSingleton(recent);
@@ -54,8 +56,11 @@ public partial class App : Application
             collection.AddSingleton<ShellViewModel>();
             collection.AddSingleton<MainWindow>();
             services = collection.BuildServiceProvider();
+            startupStage = StartupStage.Database;
             await services.GetRequiredService<IDeviceRepository>().InitializeAsync(lifetime.Token);
+            startupStage = StartupStage.Settings;
             var settings = await services.GetRequiredService<SettingsStore>().LoadAsync(lifetime.Token);
+            startupStage = StartupStage.Initialization;
             ThemeManager.Apply(settings.Theme);
             var model = services.GetRequiredService<ShellViewModel>();
             model.ApplySettings(settings);
@@ -69,9 +74,9 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            // Exception text can contain user-controlled configuration; log only the category.
-            Log.Error("Startup failed; category {FailureCategory}", ex.GetType().Name);
-            MessageBox.Show("The application could not open its portable Data folder beside the executable. Keep the app in a writable folder, outside Program Files. Check Data/settings.json and Data/logs if present. No existing data has been reset.",
+            // Never log raw exception text or stack traces: configuration may contain sensitive content.
+            Log.Error("Startup failed; stage {StartupStage}; category {FailureCategory}", startupStage, ex.GetType().Name);
+            MessageBox.Show(StartupDiagnostics.Describe(startupStage, ex),
                 AppIdentity.DisplayName, MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
         }

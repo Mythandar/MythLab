@@ -75,3 +75,5 @@ Focused D review complete: testable compensating credential saves, explicit brow
 Device-first SSH follow-up: every card offers SSH and Edit SSH. First connection opens prefilled username/password setup; settings remain synchronized with Connections / Credentials. Multiple profiles and shared credentials remain supported.
 
 Card action refinement: primary SSH/Wake plus a visible More menu for connection/device editing, Test Wake and confirmed Delete. Contextual availability and minimum-width wrapping verified; no Milestone E functionality added.
+
+Focused pre-E cleanup: stage-aware startup diagnostics and strict unpadded IPv4 validation for device/broadcast fields. 145 automated tests pass; no dependencies, license selection or Milestone E work added.

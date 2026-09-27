@@ -48,8 +48,8 @@ public static class DeviceRules
     private static string NormalizeIPv4(string value)
     {
         var parts = value.Split('.');
-        if (parts.Length != 4 || parts.Any(p => p.Length is < 1 or > 3 || !p.All(char.IsAsciiDigit) || !byte.TryParse(p, out _)))
-            throw new DeviceValidationException("Enter a valid dotted IPv4 address.");
+        if (parts.Length != 4 || parts.Any(p => p.Length is < 1 or > 3 || (p.Length > 1 && p[0] == '0') || !p.All(char.IsAsciiDigit) || !byte.TryParse(p, out _)))
+            throw new DeviceValidationException("Enter a valid dotted IPv4 address without leading zeros in multi-digit octets.");
         return string.Join(".", parts.Select(p => byte.Parse(p, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture)));
     }
 
