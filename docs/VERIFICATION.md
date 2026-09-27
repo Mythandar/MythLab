@@ -105,3 +105,9 @@ To verify single-file rendering, publish the smoke project with win-x64, SelfCon
 
 ## My Devices SSH workflow
 128 automated tests pass; Release build has zero warnings/errors. WPF smoke covers cancelled setup, prefilled device/endpoint, username/password setup, custom SSH port, Save & connect, credential-tab synchronization, shared-credential editing, stable IDs, profile selection and direct reconnection. Secrets use an in-memory fake; authentication is blocked before any network contact. Responsive layout, deferred shutdown and terminal renderer checks pass. Setup/card screenshots reviewed. Screenshot capture now renders arranged elements directly to avoid stretching compact modal content. Portable publishing preserves Data. No dependencies added; Milestone E remains unstarted.
+
+## Focused card overflow UI change
+- Release build succeeds with zero warnings/errors; all 128 automated tests pass.
+- WPF smoke uses automation peers to invoke primary SSH and the visible More menu. It verifies Down-to-open and Escape-to-close, device-specific accessible names, command/device binding, Edit SSH hidden without profiles, Test Wake hidden when disabled, and secondary buttons absent from the primary row.
+- Device-bound setup, save/connect, multiple-profile chooser, shared-credential warning and editing run through the actual primary/menu controls. Edit device opens the existing editor. Test Wake runs through the menu against fake probes. Delete opens the existing native confirmation, defaults to No, and cancelling preserves the device.
+- SSH and More fit within a 340-DIP responsive panel; existing narrow/wide/short-window checks and no-binding-error checks pass. Card/menu screenshots reviewed. No credential, SSH transport, terminal asset/security, persistence or dependency changes. Portable Data preserved.

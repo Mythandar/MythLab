@@ -87,7 +87,8 @@ internal static class Program
                 await shell.LoadAsync();
                 Require(connections.Credentials.Single().Availability.StartsWith("Missing credential"), "Copied credential must be visibly missing.");
                 Require(shell.Devices[0].SshProfiles.Count == 1, "SSH action must appear on its device.");
-                await DeviceSshSmoke.RunAsync(connections, repository, shell.Devices[0], secrets);
+                await DeviceSshSmoke.RunAsync(connections, repository, shell.Devices[0], secrets, main);
+                await CardMenuSmoke.CheckAdministrativeAsync(main, shell.Devices[0], repository);
                 await RenderAsync(main, "inventory-light.png");
                 shell.Search = "unmatched";
                 Require(shell.FilteredDevices.IsEmpty, "Search must filter inventory.");
@@ -183,6 +184,8 @@ internal static class Program
                 main.Width = 920;
                 main.Height = 1000;
                 await RenderAsync(main, "cards-narrow-light.png");
+                await CardMenuSmoke.CheckAsync(main, shell.Devices[0], false);
+                CardMenuSmoke.CheckMinimumWidth(main);
                 var panel = Find<ResponsiveCardsPanel>((DependencyObject)main.Content)!;
                 var list = Find<ListBox>((DependencyObject)main.Content)!;
                 var scroll = Find<ScrollViewer>(list)!;
@@ -218,7 +221,7 @@ internal static class Program
                 await shell.LoadAsync();
                 shell.Activity.Settings = shell.Activity.Settings with { WakePollIntervalSeconds = 1 };
                 smokeStatus.Sequence = new Queue<DeviceState>([DeviceState.Offline, DeviceState.Online]);
-                await shell.Activity.TestWakeCommand.ExecuteAsync(targetCard);
+                await CardMenuSmoke.InvokeMenuAsync(main, targetCard, "TestWake");
                 Require(targetCard.State == DeviceState.Online && targetCard.Wake.Capability == WakeCapability.Verified && smokeWake.Calls == 1,
                     $"Offline-wake-online must verify and persist the wake configuration: {targetCard.State}, {targetCard.Wake.Capability}, sends={smokeWake.Calls}, {targetCard.Detail}");
                 Require((await repository.ListAsync()).Single(d => d.Id == targetCard.Id).Wake.Capability == WakeCapability.Verified, "Verification must survive reload.");

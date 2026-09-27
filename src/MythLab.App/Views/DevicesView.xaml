@@ -56,14 +56,31 @@
          <TextBlock Text="{Binding Detail}" FontSize="12" MaxHeight="34" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding Detail}" Margin="0,0,0,6" AutomationProperties.LiveSetting="Polite"/>
          <TextBlock Text="{Binding LastSeen}" FontSize="12" Opacity=".65" Margin="0,0,0,8"/>
          <WrapPanel>
-          <Button Content="SSH" Command="{Binding DataContext.Connections.DeviceSshCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" ToolTip="Connect with SSH, or set it up for this device."/>
-          <Button Content="Edit SSH" Command="{Binding DataContext.Connections.EditDeviceSshCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" ToolTip="Edit this device's SSH connection and saved credential."/>
+          <Button Content="SSH" AutomationProperties.AutomationId="DeviceSsh" AutomationProperties.Name="SSH" Command="{Binding DataContext.Connections.DeviceSshCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" ToolTip="Connect with SSH, or set it up for this device."/>
 
           <Button Content="_Wake" Command="{Binding DataContext.Activity.WakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding CanWake}" Visibility="{Binding WakeEnabled, Converter={StaticResource BoolVisibility}}"/>
-          <Button Content="Test Wake" Command="{Binding DataContext.Activity.TestWakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding CanWake}" Visibility="{Binding WakeEnabled, Converter={StaticResource BoolVisibility}}" ToolTip="Checks availability, sends wake packets and watches for an Offline to Online transition."/>
           <Button Content="Cancel wake" Command="{Binding DataContext.Activity.CancelWakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Visibility="{Binding IsWaking, Converter={StaticResource BoolVisibility}}"/>
-          <Button Content="_Edit" Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-          <Button Content="_Delete" Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+          <Button Content="&#x22EF;" Padding="10,4" MinWidth="36" AutomationProperties.AutomationId="DeviceMoreActions"
+           AutomationProperties.Name="{Binding DisplayName, StringFormat='More actions for {0}'}"
+           ToolTip="More device actions" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
+           Click="OpenCardMenu" PreviewKeyDown="CardMenuKeyDown">
+           <Button.ContextMenu>
+            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}" Opened="CardMenuOpened">
+             <!-- Future connection types add secondary menu entries here, not card edit buttons. -->
+             <MenuItem Header="Edit _SSH&#x2026;" AutomationProperties.Name="Edit SSH" AutomationProperties.AutomationId="EditSsh"
+              Visibility="{Binding HasSshProfiles, Converter={StaticResource BoolVisibility}}"
+              Command="{Binding PlacementTarget.Tag.Connections.EditDeviceSshCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+             <MenuItem Header="_Edit device&#x2026;" AutomationProperties.Name="Edit device" AutomationProperties.AutomationId="EditDevice"
+              Command="{Binding PlacementTarget.Tag.EditCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+             <MenuItem Header="_Test Wake" AutomationProperties.Name="Test Wake" AutomationProperties.AutomationId="TestWake"
+              Visibility="{Binding WakeEnabled, Converter={StaticResource BoolVisibility}}" IsEnabled="{Binding CanWake}"
+              Command="{Binding PlacementTarget.Tag.Activity.TestWakeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+             <Separator/>
+             <MenuItem Header="_Delete device&#x2026;" AutomationProperties.Name="Delete device" AutomationProperties.AutomationId="DeleteDevice"
+              Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+            </ContextMenu>
+           </Button.ContextMenu>
+          </Button>
          </WrapPanel>
         </StackPanel>
        </Grid>

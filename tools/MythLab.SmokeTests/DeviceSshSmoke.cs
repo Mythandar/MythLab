@@ -10,11 +10,12 @@ namespace MythLab.SmokeTests;
 internal static class DeviceSshSmoke
 {
     public static async Task RunAsync(ConnectionsViewModel connections, SqliteDeviceRepository repository,
-        DeviceCardViewModel card, SmokeSecrets secrets)
+        DeviceCardViewModel card, SmokeSecrets secrets, Window main)
     {
         foreach (var row in connections.Profiles.Where(p => p.Profile.DeviceId == card.Id).ToArray())
             await repository.DeleteProfileAsync(row.Profile.Id);
         await connections.LoadAsync();
+        await CardMenuSmoke.CheckAsync(main, card, false);
         var initialCredentials = (await repository.ListCredentialsAsync()).Count;
         var stage = 0;
         var active = true;
@@ -64,11 +65,11 @@ internal static class DeviceSshSmoke
         }));
         try
         {
-            await connections.DeviceSshCommand.ExecuteAsync(card);
+            await CardMenuSmoke.InvokePrimaryAsync(main, card);
             Require((await repository.ListProfilesAsync()).Count == 0 &&
                 (await repository.ListCredentialsAsync()).Count == initialCredentials, "Cancelling setup must save nothing.");
             stage = 1;
-            await connections.DeviceSshCommand.ExecuteAsync(card);
+            await CardMenuSmoke.InvokePrimaryAsync(main, card);
             if (failure is not null) throw failure;
             await connections.StopAsync();
             var profile = (await repository.ListProfilesAsync()).Single();
@@ -78,14 +79,15 @@ internal static class DeviceSshSmoke
             Require(secrets.Values[credential.Id] == "disposable-fixture-secret", "Secret must use credential store.");
             await repository.SaveProfileAsync(profile with { Id = Guid.NewGuid(), DisplayName = "ZZ mirror" });
             stage = 2;
-            await connections.EditDeviceSshCommand.ExecuteAsync(card);
+            await CardMenuSmoke.CheckAsync(main, card, true);
+            await CardMenuSmoke.InvokeMenuAsync(main, card, "EditSsh");
             if (failure is not null) throw failure;
             var edited = (await repository.ListProfilesAsync()).Single(p => p.Id == profile.Id);
             Require(edited.Port == 2200 && edited.CredentialId == credential.Id, "Edit must preserve profile and credential IDs.");
             Require((await repository.ListCredentialsAsync()).Single(c => c.Id == credential.Id).Username == "edited-user" &&
                 secrets.Values[credential.Id] == "disposable-fixture-secret", "Metadata edit must preserve saved secret.");
             stage = 3;
-            await connections.DeviceSshCommand.ExecuteAsync(card);
+            await CardMenuSmoke.InvokePrimaryAsync(main, card);
             await connections.StopAsync();
             if (failure is not null) throw failure;
             Require(terminals == 2, "Configured SSH must connect without a credential editor.");

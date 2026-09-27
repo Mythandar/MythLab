@@ -73,3 +73,5 @@ Milestone D: reusable Windows credentials, persisted SSH profiles, explicit know
 Focused D review complete: testable compensating credential saves, explicit browser reopen recovery, and automatic close after metadata work. 128 automated tests and local WPF/terminal/SSH smoke pass. Milestone E remains next.
 
 Device-first SSH follow-up: every card offers SSH and Edit SSH. First connection opens prefilled username/password setup; settings remain synchronized with Connections / Credentials. Multiple profiles and shared credentials remain supported.
+
+Card action refinement: primary SSH/Wake plus a visible More menu for connection/device editing, Test Wake and confirmed Delete. Contextual availability and minimum-width wrapping verified; no Milestone E functionality added.

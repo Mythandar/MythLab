@@ -6,8 +6,9 @@ public sealed class DeviceCardViewModel(Device device) : ObservableObject
 {
     public Device Device { get; private set; } = device;
     public IReadOnlyList<Core.Connections.ConnectionProfile> SshProfiles { get; private set; } = [];
+    public bool HasSshProfiles => SshProfiles.Count > 0;
     public void SetProfiles(IReadOnlyList<Core.Connections.ConnectionProfile> profiles)
-    { SshProfiles = profiles; OnPropertyChanged(nameof(SshProfiles)); }
+    { SshProfiles = profiles; OnPropertyChanged(nameof(SshProfiles)); OnPropertyChanged(nameof(HasSshProfiles)); }
     public Guid Id => Device.Id;
     public string DisplayName => Device.DisplayName;
     public string Endpoint => Device.Endpoint;
