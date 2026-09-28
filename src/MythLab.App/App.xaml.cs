@@ -42,6 +42,9 @@ public partial class App : Application
             collection.AddSingleton<Core.Credentials.ICredentialStore>(_ => new Infrastructure.Credentials.WindowsCredentialStore(AppIdentity.DataId));
             collection.AddSingleton(_ => new Infrastructure.Ssh.KnownHostsStore(paths.KnownHosts));
             collection.AddSingleton<Infrastructure.Ssh.SshSessionService>();
+            collection.AddSingleton<Core.Connections.IExecutableLocator, Infrastructure.Connections.WindowsExecutableLocator>();
+            collection.AddSingleton<Core.Connections.IConnectionLauncher, Infrastructure.Connections.WindowsConnectionLauncher>();
+            collection.AddSingleton<Core.Connections.ExternalConnectionService>();
             collection.AddSingleton<ConnectionsViewModel>();
             collection.AddSingleton(_ => new SettingsStore(paths.Settings));
             collection.AddSingleton<Views.DeviceDialogs>();

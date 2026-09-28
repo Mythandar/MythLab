@@ -159,7 +159,7 @@ internal static class CardMenuSmoke
         var panel = Visuals<ResponsiveCardsPanel>(main).Single();
         panel.Measure(new Size(340, double.PositiveInfinity));
         panel.Arrange(new Rect(0, 0, 340, panel.DesiredSize.Height));
-        foreach (var button in Visuals<Button>(panel).Where(b => AutomationProperties.GetAutomationId(b) is "DeviceSsh" or "DeviceMoreActions"))
+        foreach (var button in Visuals<Button>(panel).Where(b => b.IsVisible && AutomationProperties.GetAutomationId(b).StartsWith("Device")))
         {
             var bounds = button.TransformToAncestor(panel).TransformBounds(new Rect(button.RenderSize));
             Require(button.IsVisible && bounds.Left >= 0 && bounds.Right <= 340, "Primary and More controls must fit at minimum card width.");

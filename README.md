@@ -12,7 +12,7 @@ dotnet test MythLab.slnx --no-build
 dotnet run --project src/MythLab.App
 ```
 
-Current scope: persistent managed-device CRUD, duplicate validation, groups/notes/tags, live ICMP/TCP status, cancellable Wake/Test Wake, settings/diagnostics, and bounded cancellable LAN discovery with add-to-inventory. Reusable Windows-secured credentials and integrated SSH password/private-key sessions are implemented. External launchers and Wake & Connect are subsequent milestones.
+Current scope: persistent managed-device CRUD, duplicate validation, groups/notes/tags, live ICMP/TCP status, cancellable Wake/Test Wake, settings/diagnostics, and bounded cancellable LAN discovery with add-to-inventory. Reusable Windows-secured credentials and integrated SSH password/private-key sessions are implemented. External RealVNC, Moonlight, RDP, HTTP/HTTPS, local terminal and custom executable profiles are implemented. Add them from a device card's More > Add connection menu; configured actions appear on the card. Optional TCP readiness checks do not wake the device. Milestone F (Wake & Connect) awaits independent review of E.
 
 Normal data is stored in a Data folder beside the executable. A single-executable, self-contained Windows x64 build is available; see [portable publishing](docs/PORTABLE.md). Passwords and key passphrases remain in Windows Credential Manager; portable metadata contains only references. Change the display name in build/Identity.props. See [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md) and [dependencies](docs/THIRD-PARTY-NOTICES.md).
 

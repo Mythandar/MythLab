@@ -4,12 +4,13 @@
  <DockPanel><TextBlock Text="Connections &amp; credentials" FontSize="28" FontWeight="SemiBold"/>
  <Button Content="Refresh" Command="{Binding RefreshCommand}" HorizontalAlignment="Right"/></DockPanel>
  <TextBlock Text="{Binding Message}" Margin="0,12,0,16" AutomationProperties.LiveSetting="Polite"/>
- <TextBlock Text="SSH connections" FontSize="20" FontWeight="SemiBold"/>
+ <TextBlock Text="Connection profiles" FontSize="20" FontWeight="SemiBold"/>
  <DataGrid ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" Height="170" Margin="0,8,0,8" SelectionMode="Single">
  <DataGrid.Columns><DataGridTextColumn Header="Connection" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="Device" Binding="{Binding DeviceName}" Width="*"/>
- <DataGridTextColumn Header="Credential" Binding="{Binding CredentialLabel}" Width="*"/><DataGridTextColumn Header="Port" Binding="{Binding Port}" Width="70"/></DataGrid.Columns></DataGrid>
- <WrapPanel><Button Content="Add SSH" Command="{Binding AddProfileCommand}"/><Button Content="Edit" Command="{Binding EditProfileCommand}"/>
+ <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="85"/><DataGridTextColumn Header="Launcher" Binding="{Binding LauncherStatus}" Width="2*"/><DataGridTextColumn Header="Credential" Binding="{Binding CredentialLabel}" Width="*"/><DataGridTextColumn Header="Port" Binding="{Binding Port}" Width="70"/></DataGrid.Columns></DataGrid>
+ <WrapPanel><Button Content="Add SSH" Command="{Binding AddProfileCommand}"/><Button Content="Add external" Command="{Binding AddExternalCommand}"/><Button Content="Edit" Command="{Binding EditProfileCommand}"/>
  <Button Content="Delete" Command="{Binding DeleteProfileCommand}"/><Button Content="Connect" Command="{Binding ConnectCommand}"/></WrapPanel>
+ <Button Content="Cancel readiness check" Command="{Binding CancelExternalCommand}" Visibility="{Binding IsLaunching, Converter={StaticResource BoolVisibility}}" HorizontalAlignment="Left"/>
  <TextBlock Text="Reusable credentials" FontSize="20" FontWeight="SemiBold" Margin="0,24,0,0"/>
  <TextBlock Text="Secrets stay in Windows Credential Manager. After moving the portable folder, use Edit / recreate to restore a missing secret." Opacity=".7" Margin="0,8,0,0"/>
  <DataGrid ItemsSource="{Binding Credentials}" SelectedItem="{Binding SelectedCredential}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" Height="160" Margin="0,8,0,8" SelectionMode="Single">

@@ -1,6 +1,6 @@
 # Roadmap
 
-Milestones A–C are implemented. The pre-D review fixed cached-MAC probing, multi-address status checks, discovery freshness wording and added Windows CI. Milestone D (credentials/integrated SSH) is next and has not started. Subsequent milestones are intentionally separate working increments, each requiring a clean build, offline tests, documentation update and local commit if Git is in use.
+Milestones A-E are implemented. Milestone E is ready for independent review. Do not begin F (Wake & Connect) until that review is complete. Each milestone requires a clean build, automated tests, desktop smoke verification and documentation.
 
 ## A — Foundation (complete)
 - [x] Inspect environment and verify .NET 10
@@ -35,11 +35,16 @@ Milestones A–C are implemented. The pre-D review fixed cached-MAC probing, mul
 - [x] Functional interactive SSH terminal, password/key auth, resize, clipboard and reconnect
 - [x] License asset copies and runtime installation guidance
 
-## E — External connections
-- [ ] RealVNC / Moonlight executable configuration and optional detection
-- [ ] HTTP(S), PowerShell and custom executable profiles
-- [ ] Safe argument-list templates and tests; no secret substitution
-- [ ] Per-profile readiness checks
+## E - External connections (complete; awaiting independent review)
+- [x] RealVNC / Moonlight executable configuration and optional detection
+- [x] Native RDP fallback with configurable port and fullscreen/windowed preference
+- [x] HTTP(S), external local PowerShell/pwsh/Windows Terminal and custom executable profiles
+- [x] Common structured argument-list launcher, strict URL schemes and no credential substitution
+- [x] Optional bounded/cancellable device TCP readiness check; no wake orchestration
+- [x] Portable profile persistence despite missing local executables
+- [x] Configured primary card actions; setup/edit through More; multiple-profile chooser
+- [x] Automated launch/persistence/security tests and WPF minimum-width smoke
+- [x] Release build, portable publish and documentation
 
 ## F — Wake & Connect
 - [ ] Cancellable orchestration, finite timeout and precise failure stages
@@ -77,3 +82,5 @@ Device-first SSH follow-up: every card offers SSH and Edit SSH. First connection
 Card action refinement: primary SSH/Wake plus a visible More menu for connection/device editing, Test Wake and confirmed Delete. Contextual availability and minimum-width wrapping verified; no Milestone E functionality added.
 
 Focused pre-E cleanup: stage-aware startup diagnostics and strict unpadded IPv4 validation for device/broadcast fields. 145 automated tests pass; no dependencies, license selection or Milestone E work added.
+
+Milestone E verification (2026-09-27): 200 automated tests pass (130 Core, 70 Infrastructure). Release and WPF/terminal smoke pass. No new dependencies or project license; portable Data remains unchanged. External application/server interoperability still requires manual acceptance on the owner's installed clients. F remains blocked on independent review by project policy.

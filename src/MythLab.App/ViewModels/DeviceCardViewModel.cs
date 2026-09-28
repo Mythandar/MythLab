@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using MythLab.Core.Devices;
+using MythLab.Core.Connections;
 namespace MythLab.App.ViewModels;
 
 public sealed class DeviceCardViewModel(Device device) : ObservableObject
@@ -8,7 +9,25 @@ public sealed class DeviceCardViewModel(Device device) : ObservableObject
     public IReadOnlyList<Core.Connections.ConnectionProfile> SshProfiles { get; private set; } = [];
     public bool HasSshProfiles => SshProfiles.Count > 0;
     public void SetProfiles(IReadOnlyList<Core.Connections.ConnectionProfile> profiles)
-    { SshProfiles = profiles; OnPropertyChanged(nameof(SshProfiles)); OnPropertyChanged(nameof(HasSshProfiles)); }
+    {
+        SshProfiles = profiles.Where(p => p.Kind == ConnectionKind.Ssh).ToArray();
+        ExternalProfiles = profiles.Where(p => p.Kind != ConnectionKind.Ssh).ToArray();
+        OnPropertyChanged(string.Empty);
+    }
+    public IReadOnlyList<ConnectionProfile> ExternalProfiles { get; private set; } = [];
+    public bool HasExternalProfiles => ExternalProfiles.Count > 0;
+    public bool HasMoonlight => ExternalProfiles.Any(p => p.Kind == ConnectionKind.Moonlight);
+    public DeviceConnectionAction MoonlightAction => new(Id, ConnectionKind.Moonlight);
+    public bool HasRealVnc => ExternalProfiles.Any(p => p.Kind == ConnectionKind.RealVnc);
+    public DeviceConnectionAction RealVncAction => new(Id, ConnectionKind.RealVnc);
+    public bool HasRdp => ExternalProfiles.Any(p => p.Kind == ConnectionKind.Rdp);
+    public DeviceConnectionAction RdpAction => new(Id, ConnectionKind.Rdp);
+    public bool HasWeb => ExternalProfiles.Any(p => p.Kind == ConnectionKind.Web);
+    public DeviceConnectionAction WebAction => new(Id, ConnectionKind.Web);
+    public bool HasLocalPowerShell => ExternalProfiles.Any(p => p.Kind == ConnectionKind.LocalPowerShell);
+    public DeviceConnectionAction LocalPowerShellAction => new(Id, ConnectionKind.LocalPowerShell);
+    public bool HasCustom => ExternalProfiles.Any(p => p.Kind == ConnectionKind.Custom);
+    public DeviceConnectionAction CustomAction => new(Id, ConnectionKind.Custom);
     public Guid Id => Device.Id;
     public string DisplayName => Device.DisplayName;
     public string Endpoint => Device.Endpoint;

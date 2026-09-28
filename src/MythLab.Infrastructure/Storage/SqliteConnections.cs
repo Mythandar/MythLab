@@ -54,11 +54,7 @@ public sealed partial class SqliteDeviceRepository
     }
     public Task SaveProfileAsync(ConnectionProfile profile, CancellationToken token = default)
     {
-        if (profile.Id == Guid.Empty || profile.DeviceId == Guid.Empty || profile.CredentialId is null ||
-            profile.CredentialId == Guid.Empty || string.IsNullOrWhiteSpace(profile.DisplayName) ||
-            profile.DisplayName.Length > 120 || profile.Kind != ConnectionKind.Ssh ||
-            profile.Port is null or < 1 or > 65535 || profile.TimeoutSeconds is < 5 or > 300)
-            throw new ArgumentException("SSH needs a name, managed device, credential, port 1–65535 and timeout 5–300 seconds.");
+        ExternalConnections.Validate(profile);
         return RunAsync(connection =>
         {
             using var command = connection.CreateCommand();
@@ -68,7 +64,7 @@ public sealed partial class SqliteDeviceRepository
                 """;
             command.Parameters.AddWithValue("$id", profile.Id.ToString());
             command.Parameters.AddWithValue("$device", profile.DeviceId.ToString());
-            command.Parameters.AddWithValue("$credential", profile.CredentialId.Value.ToString());
+            command.Parameters.AddWithValue("$credential", (object?)profile.CredentialId?.ToString() ?? DBNull.Value);
             command.Parameters.AddWithValue("$document", JsonSerializer.Serialize(profile with { DisplayName = profile.DisplayName.Trim() }));
             command.ExecuteNonQuery();
             return true;

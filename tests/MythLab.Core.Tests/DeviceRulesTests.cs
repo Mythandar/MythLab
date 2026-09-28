@@ -116,7 +116,7 @@ public sealed class DeviceRulesTests
         using var profileJson = JsonDocument.Parse(JsonSerializer.Serialize(profile));
         Assert.Equal(credential.Id, profileJson.RootElement.GetProperty("CredentialId").GetGuid());
         Assert.Equal(new[] { "Arguments", "CredentialId", "DeviceId", "DisplayName", "ExecutablePath", "Id", "Kind",
-            "Port", "ReadinessPort", "RemoteApplication", "TimeoutSeconds", "UrlTemplate", "WakeAndConnect" },
+            "Port", "RdpFullscreen", "ReadinessPort", "RemoteApplication", "TimeoutSeconds", "UrlTemplate", "WakeAndConnect" },
             profileJson.RootElement.EnumerateObject().Select(p => p.Name).Order().ToArray());
         Assert.DoesNotContain(profileJson.RootElement.EnumerateObject(),
             p => p.Name.Contains("password", StringComparison.OrdinalIgnoreCase) ||

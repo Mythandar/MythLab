@@ -14,7 +14,11 @@
   </DockPanel>
   <TextBox Grid.Row="1" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Margin="0,20,8,12"
    AutomationProperties.Name="Search devices" ToolTip="Search name, hostname, IP, MAC, group or tags"/>
-  <TextBlock Grid.Row="2" Text="Status uses the configured ICMP or TCP check. Wake waits for that check to succeed." Opacity=".65" Margin="0,0,0,16"/>
+  <StackPanel Grid.Row="2" Margin="0,0,0,16">
+   <TextBlock Text="Status uses the configured ICMP or TCP check. Wake waits for that check to succeed." Opacity=".65"/>
+   <Button Content="Cancel connection readiness check" Command="{Binding Connections.CancelExternalCommand}"
+    Visibility="{Binding Connections.IsLaunching, Converter={StaticResource BoolVisibility}}" HorizontalAlignment="Left"/>
+  </StackPanel>
   <Grid Grid.Row="3">
    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsEmpty, Converter={StaticResource BoolVisibility}}">
     <TextBlock Text="Your devices, in one place" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center"/>
@@ -58,6 +62,12 @@
          <WrapPanel>
           <Button Content="SSH" AutomationProperties.AutomationId="DeviceSsh" AutomationProperties.Name="SSH" Command="{Binding DataContext.Connections.DeviceSshCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" ToolTip="Connect with SSH, or set it up for this device."/>
 
+          <Button Content="Moonlight" AutomationProperties.AutomationId="DeviceMoonlight" AutomationProperties.Name="Moonlight" Visibility="{Binding HasMoonlight, Converter={StaticResource BoolVisibility}}" Command="{Binding DataContext.Connections.DeviceExternalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding MoonlightAction}"/>
+          <Button Content="VNC" AutomationProperties.AutomationId="DeviceRealVnc" AutomationProperties.Name="VNC" Visibility="{Binding HasRealVnc, Converter={StaticResource BoolVisibility}}" Command="{Binding DataContext.Connections.DeviceExternalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding RealVncAction}"/>
+          <Button Content="RDP" AutomationProperties.AutomationId="DeviceRdp" AutomationProperties.Name="RDP" Visibility="{Binding HasRdp, Converter={StaticResource BoolVisibility}}" Command="{Binding DataContext.Connections.DeviceExternalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding RdpAction}"/>
+          <Button Content="Web" AutomationProperties.AutomationId="DeviceWeb" AutomationProperties.Name="Web" Visibility="{Binding HasWeb, Converter={StaticResource BoolVisibility}}" Command="{Binding DataContext.Connections.DeviceExternalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding WebAction}"/>
+          <Button Content="Terminal" AutomationProperties.AutomationId="DeviceLocalPowerShell" AutomationProperties.Name="Terminal" Visibility="{Binding HasLocalPowerShell, Converter={StaticResource BoolVisibility}}" Command="{Binding DataContext.Connections.DeviceExternalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding LocalPowerShellAction}"/>
+          <Button Content="Custom" AutomationProperties.AutomationId="DeviceCustom" AutomationProperties.Name="Custom" Visibility="{Binding HasCustom, Converter={StaticResource BoolVisibility}}" Command="{Binding DataContext.Connections.DeviceExternalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding CustomAction}"/>
           <Button Content="_Wake" Command="{Binding DataContext.Activity.WakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding CanWake}" Visibility="{Binding WakeEnabled, Converter={StaticResource BoolVisibility}}"/>
           <Button Content="Cancel wake" Command="{Binding DataContext.Activity.CancelWakeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Visibility="{Binding IsWaking, Converter={StaticResource BoolVisibility}}"/>
           <Button Content="&#x22EF;" Padding="10,4" MinWidth="36" AutomationProperties.AutomationId="DeviceMoreActions"
@@ -70,6 +80,11 @@
              <MenuItem Header="Edit _SSH&#x2026;" AutomationProperties.Name="Edit SSH" AutomationProperties.AutomationId="EditSsh"
               Visibility="{Binding HasSshProfiles, Converter={StaticResource BoolVisibility}}"
               Command="{Binding PlacementTarget.Tag.Connections.EditDeviceSshCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+             <MenuItem Header="Add _connection&#x2026;" AutomationProperties.Name="Add connection" AutomationProperties.AutomationId="AddExternal"
+              Command="{Binding PlacementTarget.Tag.Connections.AddExternalCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+             <MenuItem Header="Edit e_xternal connections&#x2026;" AutomationProperties.Name="Edit external connections" AutomationProperties.AutomationId="EditExternal"
+              Visibility="{Binding HasExternalProfiles, Converter={StaticResource BoolVisibility}}"
+              Command="{Binding PlacementTarget.Tag.Connections.EditExternalCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
              <MenuItem Header="_Edit device&#x2026;" AutomationProperties.Name="Edit device" AutomationProperties.AutomationId="EditDevice"
               Command="{Binding PlacementTarget.Tag.EditCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
              <MenuItem Header="_Test Wake" AutomationProperties.Name="Test Wake" AutomationProperties.AutomationId="TestWake"

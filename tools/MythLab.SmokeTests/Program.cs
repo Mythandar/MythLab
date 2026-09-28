@@ -50,9 +50,11 @@ internal static class Program
                 var smokeWake = new SmokeWake();
                 var secrets = new SmokeSecrets();
                 var hosts = new MythLab.Infrastructure.Ssh.KnownHostsStore(Path.Combine(directory, "known-hosts.json"));
+                var externalFixture = new ExternalFixture();
+                var externalService = new MythLab.Core.Connections.ExternalConnectionService(externalFixture, externalFixture, externalFixture);
                 var connections = new ConnectionsViewModel(repository, repository, secrets, hosts,
                     new MythLab.Infrastructure.Ssh.SshSessionService(secrets, hosts, loggerFactory.CreateLogger<MythLab.Infrastructure.Ssh.SshSessionService>()),
-                    new AppPaths("Smoke", directory), loggerFactory.CreateLogger<ConnectionsViewModel>());
+                    new AppPaths("Smoke", directory), loggerFactory.CreateLogger<ConnectionsViewModel>(), externalService);
                 var shell = new ShellViewModel(repository, settings, new RecentLogSink(), logger,
                     new AppPaths(AppIdentity.DataId), dialogs, discovery, new DeviceActivityViewModel(repository, smokeStatus, new MythLab.Infrastructure.WakeOnLan.WakeDeviceService(smokeWake, smokeStatus), loggerFactory.CreateLogger<DeviceActivityViewModel>()), connections);
                 await repository.InitializeAsync();
@@ -89,6 +91,7 @@ internal static class Program
                 Require(shell.Devices[0].SshProfiles.Count == 1, "SSH action must appear on its device.");
                 await DeviceSshSmoke.RunAsync(connections, repository, shell.Devices[0], secrets, main);
                 await CardMenuSmoke.CheckAdministrativeAsync(main, shell.Devices[0], repository);
+                await ExternalSmoke.RunAsync(connections, repository, shell.Devices[0], main, externalFixture);
                 await RenderAsync(main, "inventory-light.png");
                 shell.Search = "unmatched";
                 Require(shell.FilteredDevices.IsEmpty, "Search must filter inventory.");

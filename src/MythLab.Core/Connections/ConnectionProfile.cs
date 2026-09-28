@@ -1,6 +1,6 @@
 namespace MythLab.Core.Connections;
 
-public enum ConnectionKind { Ssh, RealVnc, Moonlight, Web, LocalPowerShell, Custom }
+public enum ConnectionKind { Ssh, RealVnc, Moonlight, Web, LocalPowerShell, Custom, Rdp }
 public sealed record ConnectionProfile
 {
     public Guid Id { get; init; } = Guid.NewGuid();
@@ -13,6 +13,7 @@ public sealed record ConnectionProfile
     public string[] Arguments { get; init; } = [];
     public string UrlTemplate { get; init; } = "";
     public string RemoteApplication { get; init; } = "";
+    public bool RdpFullscreen { get; init; }
     public bool WakeAndConnect { get; init; }
     public int? ReadinessPort { get; init; }
     public int TimeoutSeconds { get; init; } = 120;

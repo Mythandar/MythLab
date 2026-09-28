@@ -20,11 +20,13 @@ public sealed record CredentialRow(CredentialReference Credential, string Availa
 public sealed record ProfileRow(ConnectionProfile Profile, string DeviceName, string CredentialLabel)
 {
     public string Name => Profile.DisplayName;
+    public string Type => ExternalConnections.Label(Profile.Kind);
+    public string LauncherStatus { get; init; } = "";
     public int? Port => Profile.Port;
 }
 public partial class ConnectionsViewModel(IConnectionRepository repository, IDeviceRepository devices,
     ICredentialStore secrets, KnownHostsStore knownHosts, SshSessionService ssh, AppPaths paths,
-    ILogger<ConnectionsViewModel> logger) : ObservableObject
+    ILogger<ConnectionsViewModel> logger, ExternalConnectionService? external = null) : ObservableObject
 {
     public ObservableCollection<CredentialRow> Credentials { get; } = [];
     public ObservableCollection<ProfileRow> Profiles { get; } = [];
@@ -34,7 +36,7 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
     [ObservableProperty] private CredentialRow? selectedCredential;
     [ObservableProperty] private ProfileRow? selectedProfile;
     [ObservableProperty] private KnownHost? selectedHost;
-    [ObservableProperty] private string message = "Create a reusable credential, then add an SSH profile for a managed device.";
+    [ObservableProperty] private string message = "Set up device connections here or from a device card. External applications handle their own authentication.";
     [ObservableProperty] private bool isBusy;
     public event EventHandler? ProfilesChanged;
     public async Task LoadAsync(CancellationToken token = default)
@@ -52,8 +54,13 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
         }
         Profiles.Clear();
         foreach (var profile in savedProfiles)
+        {
+            var availability = profile.Kind == ConnectionKind.Ssh ? "Integrated SSH" :
+                external is null ? "Launcher unavailable" : (await Task.Run(() => external.Availability(profile), token)).Detail;
             Profiles.Add(new(profile, savedDevices.FirstOrDefault(d => d.Id == profile.DeviceId)?.DisplayName ?? "Missing device",
-                savedCredentials.FirstOrDefault(c => c.Id == profile.CredentialId)?.DisplayLabel ?? "Missing credential"));
+                profile.Kind == ConnectionKind.Ssh ? savedCredentials.FirstOrDefault(c => c.Id == profile.CredentialId)?.DisplayLabel ?? "Missing credential" : "External application")
+                { LauncherStatus = availability });
+        }
         ProfilesChanged?.Invoke(this, EventArgs.Empty);
         KnownHosts.Clear();
         try { foreach (var host in await knownHosts.ListAsync(token)) KnownHosts.Add(host); }
@@ -86,7 +93,7 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
             }
             if (!edit) launch = profile;
         });
-        if (launch is not null) Connect(launch);
+        if (launch is not null) await ConnectAsync(launch);
     }
     [RelayCommand] private Task RefreshAsync() => RunAsync(() => LoadAsync());
     [RelayCommand] private Task AddCredentialAsync() => RunAsync(async () =>
@@ -112,7 +119,11 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
     });
     [RelayCommand] private Task EditProfileAsync() => RunAsync(async () =>
     {
-        if (SelectedProfile is { } row && ConnectionDialogs.EditProfile(repository, await devices.ListAsync(), await repository.ListCredentialsAsync(), row.Profile)) await LoadAsync();
+        if (SelectedProfile is not { } row) return;
+        var changed = row.Profile.Kind == ConnectionKind.Ssh
+            ? ConnectionDialogs.EditProfile(repository, await devices.ListAsync(), await repository.ListCredentialsAsync(), row.Profile)
+            : ExternalProfileDialog.Edit(repository, await devices.ListAsync(), row.Profile);
+        if (changed) await LoadAsync();
     });
     [RelayCommand] private Task DeleteProfileAsync() => RunAsync(async () =>
     {
@@ -125,10 +136,11 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
         { await knownHosts.RemoveAsync(host); await LoadAsync(); }
     });
     [RelayCommand]
-    private void Connect(ConnectionProfile? profile)
+    private async Task ConnectAsync(ConnectionProfile? profile)
     {
         profile ??= SelectedProfile?.Profile;
         if (profile is null || IsBusy) return;
+        if (profile.Kind != ConnectionKind.Ssh) { await LaunchExternalAsync(profile); return; }
         var id = profile.Id;
         var window = new TerminalWindow(paths, profile.DisplayName + " — " + AppIdentity.DisplayName, async token =>
         {
@@ -149,6 +161,7 @@ public partial class ConnectionsViewModel(IConnectionRepository repository, IDev
     }
     public async Task StopAsync()
     {
+        externalCancellation?.Cancel();
         foreach (var window in terminals.ToArray()) await window.CloseSessionAsync();
     }
     private static bool Confirm(string text) => MessageBox.Show(Application.Current.MainWindow, text, AppIdentity.DisplayName,

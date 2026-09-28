@@ -119,3 +119,24 @@ To verify single-file rendering, publish the smoke project with win-x64, SelfCon
 - Shared device/broadcast validation rejects multi-digit IPv4 octets beginning with zero. Tests cover all requested valid and invalid examples, the formerly accepted padded address, and both device and manually entered broadcast fields.
 - WPF smoke passed, including device editor validation, SSH/card menu behavior, confirmation, responsive layout and shutdown. Portable publishing preserves existing Data.
 - No dependency or persistence architecture changes; SSH, terminal, credentials, discovery, WoL and card-menu behavior are untouched. No root project license was added; owner selection remains pending. Milestone E remains unstarted.
+
+## Milestone E - External connections (2026-09-27)
+- Locked restore succeeds. Release solution build: zero warnings/errors.
+- Full automated suite: **200 passed** (130 Core, 70 Infrastructure), zero failures/skips. CI selection excludes only the existing two LocalNetwork tests, for 198 offline tests. Added tests do not launch processes or use live network services.
+- New tests cover allowlisted template replacement, host/IP/port fallback, executable paths with spaces, argument boundaries with quote/shell-looking device values, HTTP/HTTPS URI escaping and scheme/userinfo rejection, disallowed secret placeholders/auth options, external credential-reference rejection, native RDP construction, shell restrictions, readiness success/failure/cancellation/disabled paths, missing executable diagnostics, copied metadata and six connection types on one device.
+- WPF smoke passes without binding errors: existing SSH setup/edit/chooser and credential synchronization; external device-bound add/edit from More; all six configured primary actions via automation; multiple-profile chooser; missing-launcher feedback with metadata intact; cancelled readiness with no launch; all action controls inside the 340-DIP minimum card width. Narrow external-action rendering reviewed. Existing responsive wide/short/theme/monitoring/WoL/shutdown checks pass.
+- Terminal regression smoke passes: initialization failure/reopen recovery, local Evergreen assets, ANSI/split UTF-8, input, resize, selection, CSP, reconnect and portable browser data. No SSH architecture or browser security changes.
+- Portable single-file Release publish preserves the existing Data directory. No viewer/runtime bundling, package changes, root LICENSE or generated .rdp files.
+- Native launches/readiness in new automated/UI tests use fakes; process-start configuration itself is tested directly. No external GUI/terminal applications, live LAN connections or WoL packets are started by these tests. Local-terminal profiles open a visible interactive terminal only when explicitly invoked by a user.
+
+### Manual external-client acceptance
+From My Devices, choose More > Add connection, select a type, save, then use its primary button. More > Edit external connections selects an existing profile; Connections supports add/edit/delete and shows freshly computed launcher availability.
+- RDP: test the installed system client against an authorized host on default and alternate ports, fullscreen/windowed; authenticate through Windows. No MythLab SSH credential is forwarded.
+- RealVNC: select the installed viewer if detection misses it; test direct host/port and native authentication.
+- Moonlight: pair through Moonlight first; set the exact app name for direct streaming or leave blank for its host/app picker.
+- Web: check HTTP/HTTPS templates with default browser; no userinfo, passwords or tokens in the URL.
+- Terminal: blank path opens Windows PowerShell; explicitly select pwsh.exe or wt.exe to use those. No command string field is offered.
+- Custom: choose a trusted .exe, one non-secret argument per line without adding surrounding quotes. Confirm behavior with that specific program, which owns its argument semantics.
+- Readiness: blank port launches immediately; otherwise checks TCP at the device endpoint only, once, with a finite timeout. Verify refusal/timeout and Cancel connection readiness check. There is no automatic wake.
+- Move a closed portable folder to another machine: definitions stay intact; repair a missing launcher path through Edit without recreating the profile. Credentials, external-client installations/pairing and OS browser associations are outside the portable folder.
+Installed-client interoperability, screen readers, keyboard focus at multiple DPI settings and target-side authentication remain manual acceptance; fake launch success does not prove a live session. Milestone F is deliberately not implemented.
