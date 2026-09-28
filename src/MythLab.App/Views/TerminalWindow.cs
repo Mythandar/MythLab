@@ -191,7 +191,7 @@ public sealed class TerminalWindow : Window
                 acknowledgement = new(TaskCreationOptions.RunContinuationsAsynchronously);
                 browser.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "output", id = ++outputId,
                     data = Convert.ToBase64String(buffer, 0, count) }));
-                await acknowledgement.Task.WaitAsync(TimeSpan.FromSeconds(15), token);
+                await WaitForAcknowledgementAsync(acknowledgement.Task, token);
             }
         }
         catch (OperationCanceledException) { status.Text = requiresReopen ? "Renderer unavailable. Correct the problem, then close and reopen this terminal." : "Disconnected."; }
@@ -207,6 +207,27 @@ public sealed class TerminalWindow : Window
             if (session is not null) { try { await session.DisposeAsync(); } catch { status.Text = "Session closed with a transport cleanup error."; } finally { session = null; } }
             if (writer is not null) { try { await writer; } catch (Exception) { /* No raw transport detail or input is logged. */ } }
         }
+    }
+    private async Task WaitForAcknowledgementAsync(Task acknowledgementTask, CancellationToken token)
+    {
+        // Chromium may throttle hidden/minimized windows. Only visible time counts
+        // against the watchdog; output remains bounded while hidden. ProcessFailed
+        // and Disconnect still cancel immediately, including while minimized.
+        var elapsed = System.Diagnostics.Stopwatch.StartNew();
+        var active = TimeSpan.Zero;
+        var paused = WindowState == WindowState.Minimized || !IsVisible;
+        while (!acknowledgementTask.IsCompleted)
+        {
+            await Task.WhenAny(acknowledgementTask, Task.Delay(250, token));
+            token.ThrowIfCancellationRequested();
+            var nowPaused = WindowState == WindowState.Minimized || !IsVisible;
+            if (!paused && !nowPaused) active += elapsed.Elapsed;
+            elapsed.Restart();
+            paused = nowPaused;
+            if (active >= TimeSpan.FromMinutes(2))
+                throw new TimeoutException("The visible terminal renderer has not acknowledged output for two minutes. Reconnect or reopen the terminal.");
+        }
+        await acknowledgementTask;
     }
     private async Task WriteLoopAsync(ITerminalSession target, CancellationToken token)
     {

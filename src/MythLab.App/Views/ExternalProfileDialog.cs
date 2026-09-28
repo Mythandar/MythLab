@@ -89,7 +89,7 @@ public static class ExternalProfileDialog
                 UrlTemplate = url.IsEnabled ? url.Text.Trim() : "",
                 RemoteApplication = app.IsEnabled ? app.Text.Trim() : "",
                 RdpFullscreen = fullscreen.IsEnabled && fullscreen.IsChecked == true,
-                Arguments = arguments.IsEnabled && arguments.Text.Length > 0 ? arguments.Text.Replace("\r", "").Split('\n') : [],
+                Arguments = arguments.IsEnabled && arguments.Text.Length > 0 ? ExternalConnections.ParseArgumentLines(arguments.Text) : [],
                 ReadinessPort = readiness.IsEnabled ? OptionalPort(readiness.Text) : null, TimeoutSeconds = seconds
             });
         });

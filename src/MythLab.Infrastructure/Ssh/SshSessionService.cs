@@ -8,8 +8,29 @@ namespace MythLab.Infrastructure.Ssh;
 
 public sealed class SshSessionService(ICredentialStore secrets, KnownHostsStore knownHosts, ILogger<SshSessionService> logger)
 {
+    internal static HostTrust EvaluateIdentity(IEnumerable<KnownHost> known, KnownHost incoming, KnownHost? reviewed) =>
+        reviewed is not null && reviewed != incoming ? HostTrust.Changed : KnownHostsStore.Evaluate(known, incoming);
+
+    private sealed class ReviewRequired(KnownHost host) : Exception
+    { public KnownHost Host { get; } = host; }
+
     public async Task<ITerminalSession> ConnectAsync(Device device, ConnectionProfile profile, CredentialReference credential,
         Func<KnownHost, bool> confirmUnknown, CancellationToken token)
+    {
+        try { return await ConnectAttemptAsync(device, profile, credential, null, token).ConfigureAwait(false); }
+        catch (ReviewRequired review)
+        {
+            // The untrusted connection is already disposed. No network/auth timer runs
+            // while a human reviews identity; caller cancellation remains effective.
+            var accepted = await Task.Run(() => confirmUnknown(review.Host), token).WaitAsync(token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            if (!accepted) throw new HostIdentityException("The unknown SSH host key was not trusted.");
+            return await ConnectAttemptAsync(device, profile, credential, review.Host, token).ConfigureAwait(false);
+        }
+    }
+
+    private async Task<ITerminalSession> ConnectAttemptAsync(Device device, ConnectionProfile profile, CredentialReference credential,
+        KnownHost? reviewed, CancellationToken token)
     {
         if (profile.Kind != ConnectionKind.Ssh || profile.CredentialId != credential.Id || profile.Port is null or < 1 or > 65535 ||
             profile.TimeoutSeconds is < 5 or > 300) throw new ArgumentException("Invalid SSH profile.");
@@ -23,6 +44,7 @@ public sealed class SshSessionService(ICredentialStore secrets, KnownHostsStore 
             SshClient? client = null;
             KnownHost? approved = null;
             HostTrust? rejected = null;
+            KnownHost? needsReview = null;
             try
             {
                 AuthenticationMethod auth;
@@ -40,9 +62,10 @@ public sealed class SshSessionService(ICredentialStore secrets, KnownHostsStore 
                 client.HostKeyReceived += (_, e) =>
                 {
                     var incoming = KnownHostsStore.Identify(device.Endpoint, profile.Port.Value, e.HostKeyName, e.HostKey);
-                    var trust = KnownHostsStore.Evaluate(known, incoming);
+                    var trust = EvaluateIdentity(known, incoming, reviewed);
                     e.CanTrust = !token.IsCancellationRequested && (trust == HostTrust.Trusted ||
-                        trust == HostTrust.Unknown && confirmUnknown(incoming));
+                        trust == HostTrust.Unknown && reviewed == incoming);
+                    if (trust == HostTrust.Unknown && reviewed is null && !token.IsCancellationRequested) needsReview = incoming;
                     if (e.CanTrust) approved = incoming;
                     else rejected = trust;
                 };
@@ -62,6 +85,8 @@ public sealed class SshSessionService(ICredentialStore secrets, KnownHostsStore 
             catch (Exception ex)
             {
                 logger.LogWarning("SSH connection failed; profile {ProfileId}; category {FailureCategory}", profile.Id, ex.GetType().Name);
+                token.ThrowIfCancellationRequested();
+                if (needsReview is not null) throw new ReviewRequired(needsReview);
                 if (rejected is not null) throw new HostIdentityException(rejected == HostTrust.Changed
                     ? "SSH host key changed. Connection rejected. Verify the new fingerprint before removing the old trusted host."
                     : "The unknown SSH host key was not trusted.");

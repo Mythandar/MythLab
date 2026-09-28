@@ -57,6 +57,15 @@ internal static class TerminalSmoke
             if ((await browser.ExecuteScriptAsync("terminal.getSelection()")).Length < 4) throw new InvalidOperationException("Terminal selection failed.");
             await browser.ExecuteScriptAsync("window.externalBlocked=false; fetch('https://example.com/').then(()=>window.externalBlocked=false,()=>window.externalBlocked=true)");
             await UntilAsync(async () => await browser.ExecuteScriptAsync("window.externalBlocked") == "true", "CSP did not block external network requests.");
+            // Delay the real browser acknowledgement beyond the former 15-second
+            // deadline while minimized; the SSH-facing session must stay alive.
+            await browser.ExecuteScriptAsync("window.savedPost=chrome.webview.postMessage.bind(chrome.webview); chrome.webview.postMessage=m=>m.type==='ack'?setTimeout(()=>window.savedPost(m),17000):window.savedPost(m)");
+            window.WindowState = WindowState.Minimized;
+            await current!.WriteAsync(Encoding.UTF8.GetBytes("slow-renderer"), CancellationToken.None);
+            await Task.Delay(TimeSpan.FromSeconds(18));
+            if (current.Disposed) throw new InvalidOperationException("A throttled renderer disconnected the transport.");
+            window.WindowState = WindowState.Normal;
+            await browser.ExecuteScriptAsync("chrome.webview.postMessage=window.savedPost");
             var imagePath = Path.GetFullPath("artifacts/ui-smoke/terminal-spike.png");
             Directory.CreateDirectory(Path.GetDirectoryName(imagePath)!);
             await using (var stream = File.Create(imagePath))
@@ -64,7 +73,7 @@ internal static class TerminalSmoke
             _ = (Task)typeof(TerminalWindow).GetMethod("ReconnectAsync", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, null)!;
             await UntilAsync(() => Task.FromResult(connects == 2), "Reconnect did not create a fresh session.");
             if (!Directory.Exists(paths.WebView2UserData)) throw new InvalidOperationException("WebView2 cache is not under portable Data.");
-            Console.WriteLine("PASS: initialization failure/reopen recovery, Evergreen/local assets, ANSI, split UTF-8, input, resize, selection, CSP, reconnect and portable browser data.");
+            Console.WriteLine("PASS: initialization failure/reopen recovery, Evergreen/local assets, ANSI, split UTF-8, input, resize, selection, CSP, delayed acknowledgement while minimized, reconnect and portable browser data.");
         }
         finally { await window.CloseSessionAsync(); }
     }
@@ -82,6 +91,7 @@ internal static class TerminalSmoke
         private readonly Channel<byte[]> output = Channel.CreateUnbounded<byte[]>();
         public StringBuilder Input { get; } = new();
         public int Columns { get; private set; }
+        public bool Disposed { get; private set; }
         public FakeTerminal()
         {
             var bytes = Encoding.UTF8.GetBytes("\x1b[2J\x1b[H\x1b[31mRED\x1b[0m λ 世界\r\nInteractive terminal fixture\r\n");
@@ -94,6 +104,6 @@ internal static class TerminalSmoke
         }
         public Task WriteAsync(byte[] data, CancellationToken token) { Input.Append(Encoding.UTF8.GetString(data)); output.Writer.TryWrite(data); return Task.CompletedTask; }
         public Task ResizeAsync(int columns, int rows, CancellationToken token) { Columns = columns; return Task.CompletedTask; }
-        public ValueTask DisposeAsync() { output.Writer.TryComplete(); return ValueTask.CompletedTask; }
+        public ValueTask DisposeAsync() { Disposed = true; output.Writer.TryComplete(); return ValueTask.CompletedTask; }
     }
 }

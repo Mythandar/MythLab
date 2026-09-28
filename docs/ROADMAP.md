@@ -84,3 +84,5 @@ Card action refinement: primary SSH/Wake plus a visible More menu for connection
 Focused pre-E cleanup: stage-aware startup diagnostics and strict unpadded IPv4 validation for device/broadcast fields. 145 automated tests pass; no dependencies, license selection or Milestone E work added.
 
 Milestone E verification (2026-09-27): 200 automated tests pass (130 Core, 70 Infrastructure). Release and WPF/terminal smoke pass. No new dependencies or project license; portable Data remains unchanged. External application/server interoperability still requires manual acceptance on the owner's installed clients. F remains blocked on independent review by project policy.
+
+Focused D/E review: bounded SSH output backpressure, human-review-free connection timing, local-path validation, blank argument cleanup, save-time port checks and network-identity hardening. 230 automated tests plus local SSH/WPF/terminal smoke pass. Stop for independent review before F.

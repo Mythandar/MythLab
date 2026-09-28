@@ -39,6 +39,9 @@ def serve(sock):
         if channel is None or not server.ready.wait(10): return
         channel.sendall(b"SSH fixture ready\r\n")
         while data := channel.recv(8192):
+            if b"burst" in data:
+                channel.sendall(b"\x1b[32m\xf0\x9f\x8c\x8d burst \x1b[0m\r\n" * 300000)
+                continue
             channel.sendall((f"{server.size[0]}x{server.size[1]}\r\n".encode()) if b"size" in data else b"echo:" + data)
     except (paramiko.SSHException, EOFError, OSError): pass
     finally: transport.close()

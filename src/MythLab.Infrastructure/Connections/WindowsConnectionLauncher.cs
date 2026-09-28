@@ -6,6 +6,7 @@ namespace MythLab.Infrastructure.Connections;
 
 public sealed class WindowsConnectionLauncher(ILogger<WindowsConnectionLauncher> logger) : IConnectionLauncher
 {
+    internal Func<string, bool> FileExists { get; init; } = File.Exists;
     // Public construction boundary makes argument preservation testable without starting processes.
     public static ProcessStartInfo CreateStartInfo(LaunchRequest request)
     {
@@ -23,11 +24,12 @@ public sealed class WindowsConnectionLauncher(ILogger<WindowsConnectionLauncher>
     public Task LaunchAsync(LaunchRequest request, CancellationToken token = default) => Task.Run(() =>
     {
         token.ThrowIfCancellationRequested();
-        if (request.WebUri is null && !File.Exists(request.Executable))
+        var start = CreateStartInfo(request); // validate before touching the filesystem
+        if (request.WebUri is null && !FileExists(request.Executable))
             throw new InvalidOperationException("The configured executable is missing. Edit this connection and choose its new location.");
         try
         {
-            using var process = Process.Start(CreateStartInfo(request));
+            using var process = Process.Start(start);
             logger.LogInformation("External connection launched; web {IsWeb}", request.WebUri is not null);
         }
         catch (Exception ex) when (ex is Win32Exception or IOException or InvalidOperationException)
@@ -40,22 +42,29 @@ public sealed class WindowsConnectionLauncher(ILogger<WindowsConnectionLauncher>
 
 public sealed class WindowsExecutableLocator : IExecutableLocator
 {
+    internal Func<string, bool> FileExists { get; init; } = File.Exists;
+    internal Func<string, string> FullPath { get; init; } = p => Path.GetFullPath(p, AppContext.BaseDirectory);
     public LauncherAvailability Locate(ConnectionProfile profile)
     {
         try
         {
             var configured = profile.ExecutablePath;
+            if (!string.IsNullOrEmpty(configured)) ExternalConnections.ValidateExecutablePath(configured);
             if (profile.Kind == ConnectionKind.Rdp) configured = Path.Combine(Environment.SystemDirectory, "mstsc.exe");
             if (!string.IsNullOrWhiteSpace(configured))
             {
                 ExternalConnections.ValidateExecutablePath(configured);
-                var full = Path.GetFullPath(configured, AppContext.BaseDirectory);
-                return File.Exists(full) ? new(true, full, "Configured executable available") :
+                var full = FullPath(configured);
+                ExternalConnections.ValidateExecutablePath(full);
+                return FileExists(full) ? new(true, full, "Configured executable available") :
                     new(false, full, "The configured executable is missing. Edit this connection to choose its new location.");
             }
             var candidates = Candidates(profile.Kind);
             foreach (var path in candidates)
-                if (File.Exists(path)) return new(true, path, "Installed executable detected");
+            {
+                ExternalConnections.ValidateExecutablePath(path);
+                if (FileExists(path)) return new(true, path, "Installed executable detected");
+            }
             return new(false, "", ExternalConnections.Label(profile.Kind) + " is not installed or detected. Edit this connection and choose an executable.");
         }
         catch (Exception ex) when (ex is ArgumentException or IOException or NotSupportedException or UnauthorizedAccessException)

@@ -25,8 +25,7 @@ public sealed class ExternalConnectionTests
     public void DeviceDataNeverBecomesAdditionalArguments(string host)
     {
         var p = Profile() with { Arguments = ["--target", "{host}", "literal"] };
-        var request = ExternalConnections.Build(p, Device with { Hostname = host }, p.ExecutablePath);
-        Assert.Equal(["--target", host, "literal"], request.Arguments);
+        Assert.Throws<ArgumentException>(() => ExternalConnections.Build(p, Device with { Hostname = host }, p.ExecutablePath));
     }
     [Theory]
     [InlineData("{password}")]
@@ -56,9 +55,7 @@ public sealed class ExternalConnectionTests
     [Fact] public void WebPlaceholderCannotIntroduceAuthorityOrQuerySyntax()
     {
         var p = Profile(ConnectionKind.Web) with { UrlTemplate = "https://example.invalid/search?q={host}" };
-        var uri = ExternalConnections.WebUri(p, Device with { Hostname = "a&password=not-a-secret#fragment" });
-        Assert.Equal("?q=a%26password%3Dnot-a-secret%23fragment", uri.Query);
-        Assert.Equal("", uri.Fragment);
+        Assert.Throws<ArgumentException>(() => ExternalConnections.WebUri(p, Device with { Hostname = "a&password=not-a-secret#fragment" }));
         Assert.Throws<ArgumentException>(() => ExternalConnections.WebUri(p with { UrlTemplate = "https://{host}/" },
             Device with { Hostname = "trusted.invalid@evil.invalid" }));
     }

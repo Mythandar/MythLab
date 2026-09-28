@@ -34,11 +34,13 @@ public static partial class ExternalConnections
         }
         if (p.CredentialId is not null)
             throw new ArgumentException("External connections do not use MythLab credentials. Authenticate in the external application.");
-        if (p.Arguments is null || p.Arguments.Length > 64 || p.Arguments.Any(a => a is null || a.Length > 4096 || a.Any(char.IsControl)))
+        if (p.Arguments is null || p.Arguments.Length > 64 || p.Arguments.Any(a => string.IsNullOrWhiteSpace(a) || a.Length > 4096 || a.Any(char.IsControl)))
             throw new ArgumentException("Use at most 64 non-secret arguments, each on its own line.");
         foreach (var argument in p.Arguments)
         {
             ValidateTemplate(argument);
+            if (argument.Contains("{port}", StringComparison.Ordinal) && p.Port is null && DefaultPort(p.Kind) is null)
+                throw new ArgumentException("Set a port before using {port} in an argument.");
             if (Regex.IsMatch(argument, @"(?i)^(?:--?|/)?(?:password|passwd|passphrase|secret|token|pin|pw)(?:$|[=: ])") ||
                 Regex.IsMatch(argument, @"(?i)^https?://[^/]*@"))
                 throw new ArgumentException("Credentials and authentication arguments are not supported. Authenticate in the external application.");
@@ -61,8 +63,15 @@ public static partial class ExternalConnections
             throw new ArgumentException("A local terminal does not need remote readiness checks.");
     }
 
+    public static string[] ParseArgumentLines(string text) =>
+        text.Replace("\r\n", "\n").Split('\n').Where(line => !string.IsNullOrWhiteSpace(line)).ToArray();
+
     public static void ValidateExecutablePath(string path)
     {
+        // Reject UNC, slash variants, device namespaces and root-relative forms
+        // lexically, before any path resolution or filesystem probes.
+        if (path.StartsWith('\\') || path.StartsWith('/'))
+            throw new ArgumentException("External executables must be local files. Network and device paths are not supported.");
         if (path != path.Trim() || path.Any(char.IsControl) || path.IndexOfAny(['"', '<', '>', '|', '*', '?', '{', '}']) >= 0 ||
             !path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || path.Skip(2).Contains(':') ||
             path.Contains(':') && !(path.Length > 3 && char.IsAsciiLetter(path[0]) && path[1] == ':' && path[2] is '\\' or '/'))
@@ -78,8 +87,8 @@ public static partial class ExternalConnections
         ValidateTemplate(template);
         return Placeholder().Replace(template, m => m.Value switch
         {
-            "{ip}" => Required(device.IPv4Address), "{host}" => Required(device.Endpoint),
-            "{hostname}" => Required(device.Hostname),
+            "{ip}" => NetworkIdentity(device.IPv4Address, true), "{host}" => NetworkIdentity(device.Endpoint),
+            "{hostname}" => NetworkIdentity(device.Hostname),
             "{port}" => port?.ToString(CultureInfo.InvariantCulture) ?? throw new ArgumentException("Set a port to use {port}."),
             _ => throw new ArgumentException("Unsupported placeholder.")
         });
@@ -104,12 +113,20 @@ public static partial class ExternalConnections
             throw new ArgumentException("Enter an HTTP/HTTPS URL without embedded credentials.");
         return uri;
     }
-    private static string NetworkHost(Device device)
+    private static string NetworkHost(Device device) => NetworkIdentity(device.Endpoint);
+    private static string NetworkIdentity(string value, bool ipOnly = false)
     {
-        var host = Required(device.Endpoint);
-        if (host.StartsWith('-') || host.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is '.' or '-')) ||
-            Uri.CheckHostName(host) is not (UriHostNameType.Dns or UriHostNameType.IPv4))
-            throw new ArgumentException("The device needs a valid DNS hostname or IPv4 address.");
+        var host = Required(value);
+        if (ipOnly || host.All(c => char.IsAsciiDigit(c) || c == '.'))
+        {
+            var octets = host.Split('.');
+            if (octets.Length != 4 || octets.Any(o => o.Length is < 1 or > 3 ||
+                o.Length > 1 && o[0] == '0' || !o.All(char.IsAsciiDigit) || !byte.TryParse(o, out _)))
+                throw new ArgumentException("The device needs a valid dotted IPv4 address without leading zeros.");
+        }
+        else if (host.Length > 253 || host.Split('.').Any(label => label.Length is < 1 or > 63 ||
+            label.StartsWith('-') || label.EndsWith('-') || label.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-')))
+            throw new ArgumentException("The device needs a valid DNS hostname without options, whitespace or shell syntax.");
         return host;
     }
     private static void ValidateProgram(ConnectionKind kind, string executable)
